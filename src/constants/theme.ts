@@ -13,6 +13,8 @@ export const Colors = {
     background: '#F7FBF9',
     backgroundElement: '#E6F4EC',
     backgroundSelected: '#CFEDE0',
+    surface: '#FFFFFF',
+    border: '#C7E3D7',
     textSecondary: '#477267',
     primary: '#0E9F6E',
     positive: '#2FBF8B',
@@ -24,6 +26,8 @@ export const Colors = {
     background: '#081E17',
     backgroundElement: '#0F3D2E',
     backgroundSelected: '#145540',
+    surface: '#102A21',
+    border: '#28634F',
     textSecondary: '#9BE8C6',
     primary: '#2FBF8B',
     positive: '#4FD1A1',
@@ -67,6 +71,19 @@ export const Spacing = {
   four: 24,
   five: 32,
   six: 64,
+} as const;
+
+export const Radii = {
+  small: 8,
+  medium: 14,
+  large: 20,
+  pill: 999,
+} as const;
+
+export const Typography = {
+  body: { fontSize: 16, lineHeight: 24 },
+  label: { fontSize: 13, lineHeight: 18 },
+  amount: { fontSize: 32, lineHeight: 38, fontWeight: '700' as const },
 } as const;
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
