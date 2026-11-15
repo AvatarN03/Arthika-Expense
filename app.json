@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "ARTHIKA",
+    "slug": "arthika-expense",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/arthika-app-icon.png",
+    "scheme": "arthikaexpense",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "icon": "./assets/images/arthika-app-icon.png"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/images/arthika-symbol-color.png",
+        "monochromeImage": "./assets/images/arthika-symbol-color.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "server",
+      "favicon": "./assets/images/arthika-app-icon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#208AEF",
+          "image": "./assets/images/arthika-symbol-color.png",
+          "imageWidth": 76
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
