@@ -1,56 +1,172 @@
-# Welcome to your Expo app 👋
+# <img src="assets/images/arthika-logo-horizontal-color.png" alt="ARTHIKA" width="560">
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+<p>
+  <img src="assets/images/arthika-app-icon.png" alt="ARTHIKA app icon" width="128">
+</p>
 
-## Get started
+ARTHIKA is a local-first personal money management app built with React Native and Expo. It is designed to give one person a clear, trustworthy view of money held across banks, cash, and digital wallets.
 
-1. Install dependencies
+The app tracks user-recorded balances rather than claiming to connect to or verify bank activity. It will help users:
 
-   ```bash
-   npm install
-   ```
+- manage money sources such as bank accounts, cash, and wallets;
+- record expenses and transfers;
+- reconcile expected balances with amounts actually observed;
+- track EMI commitments and link paid installments to expenses;
+- see upcoming financial commitments and possible shortfalls;
+- keep financial values private on shared screens; and
+- back up and restore local data.
 
-2. Start the app
+ARTHIKA is an offline-first MVP. It does not require a login, cloud account, bank integration, or AI service.
 
-   ```bash
-   npx expo start
-   ```
+## Current progress
 
-In the output, you'll find options to open the app in a
+The app foundation and database infrastructure are implemented.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### Implemented
 
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- Expo SDK 58 / React Native app with Expo Router
+- Android-first navigation and responsive web preview
+- Light and dark visual themes
+- Home, Sources, Activity, EMIs, and Settings app routes
+- Expo Native Tabs navigation
+- Shared Expo SQLite connection for the app
+- Serializable database access and atomic transactions
+- Foreign-key initialization and native WAL configuration
+- Versioned, transactional migration runner
+- Database startup loading, error, and retry states
+- Web SQLite support with cross-origin isolation configuration
+- Money-source migration and repository
+- Money-source validation, creation, listing, detail lookup, editing, and archive behavior
+- Node/real-SQLite tests and web SQLite smoke checks
 
-## Get a fresh project
+### In progress or not yet implemented
 
-When you're ready, run:
+- Database-backed Sources screen
+- Expense creation and persistence
+- Transfer persistence and activity
+- Balance adjustments and cash reconciliation
+- EMI schedules, occurrences, and payment linking
+- Commitment and shortfall calculations
+- Privacy masking
+- PIN/biometric app lock
+- Notifications
+- Backup and restore
 
-```bash
-npm run reset-project
+Home, Sources, Activity, EMIs, and Settings currently contain representative or placeholder UI. The Add Expense sheet is implemented as a UI flow and does not yet save data.
+
+For the detailed product scope, see [PRD](docs/PRD.md) and [functional requirements](docs/FEATURES.md). For implementation status, see [progress](docs/PROGRESS.md) and [roadmap](docs/ROADMAP.md).
+
+## Technology
+
+- React Native 0.88
+- React 19
+- Expo SDK 58
+- Expo Router
+- Expo SQLite
+- TypeScript
+- ESLint
+- Node.js test runner with real SQLite
+
+The app uses direct Expo SQLite queries and a repository layer. The database implementation intentionally exposes a queued database client rather than a raw SQLite connection.
+
+## Project structure
+
+```text
+src/
+  app/                 Expo Router screens and tab layout
+  components/         Shared UI and expense components
+  constants/          Theme tokens
+  database/           SQLite connection, migrations, and repositories
+  hooks/              Shared React hooks
+docs/                 Product, architecture, database, and roadmap documents
+tests/                SQLite and money-source tests
+scripts/              Development-only database smoke scripts
+website/             Separate ARTHIKA landing-page prototype
+assets/               App, logo, and splash assets
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+## Getting started
 
-### Other setup steps
+Install dependencies:
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+```bash
+npm install
+```
 
-## Learn more
+Start the Expo development server:
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+npm start
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Useful platform commands:
 
-## Join the community
+```bash
+npm run android
+npm run ios
+npm run web
+```
 
-Join our community of developers creating universal apps.
+### Run checks
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+npm run typecheck
+npm run lint
+npm run test:database
+```
+
+Database tests use isolated real-SQLite databases and cover migrations, bindings, foreign keys, transactions, queued access, schema downgrade rejection, close/reopen behavior, WAL setup, and money-source repository rules.
+
+## Web development
+
+```bash
+npm run web
+```
+
+Expo can also run the web app by pressing `w` in an already-running Metro terminal.
+
+SQLite web requires cross-origin isolation. The project configures the required COOP/COEP headers for development and web middleware. A deployed web server must send compatible headers; browser and native devices keep separate local databases.
+
+Use browser DevTools device emulation to review mobile widths, especially 320, 390, and 768 pixels.
+
+## Native verification
+
+Android and iOS behavior should be verified with Expo Go, an emulator, or a development build after database and native-feature changes.
+
+Native verification is currently outstanding. Node.js and browser SQLite checks verify much of the foundation, but they do not establish native restart behavior, mobile keyboard behavior, safe areas, tab icons, or back navigation.
+
+## Database
+
+The app owns one `arthika.db` connection. Screens must use the database provider and repository modules rather than opening or closing SQLite directly.
+
+Database details and access rules are documented in [src/database/README.md](src/database/README.md). Product schemas and persistence rules are defined in [docs/DATABASE.md](docs/DATABASE.md).
+
+## Documentation
+
+- [Product requirements](docs/PRD.md)
+- [Functional requirements](docs/FEATURES.md)
+- [Domain model](docs/DOMAIN-MODEL.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Database design](docs/DATABASE.md)
+- [Implementation progress](docs/PROGRESS.md)
+- [Implementation roadmap](docs/ROADMAP.md)
+- [UI/UX direction](docs/UI-UX.md)
+- [Agent workflow](docs/AGENT_WORKFLOW.md)
+
+## Privacy and data ownership
+
+ARTHIKA is local-first and displays manually tracked money, not live bank balances. Privacy mode and app lock are part of the planned MVP but are not implemented yet.
+
+Until a backup system is added, users should understand that local data may be lost if the app is uninstalled or the device is lost or reset.
+
+## Brand assets
+
+- [Horizontal logo](assets/images/arthika-logo-horizontal-color.png)
+- [Reversed horizontal logo](assets/images/arthika-logo-horizontal-reversed.png)
+- [App symbol](assets/images/arthika-symbol-color.png)
+- [App icon](assets/images/arthika-app-icon.png)
+- [Additional PNG and SVG logo variants](assets/ARTHIKA-logos/)
+
+## License
+
+See [LICENSE](LICENSE).
