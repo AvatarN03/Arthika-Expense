@@ -12,8 +12,8 @@ Local-first, offline-capable, understandable to a developer learning React Nativ
 | Tooling | Expo | Recommended |
 | Language | TypeScript | Recommended |
 | Navigation | Expo Router | Recommended |
-| Local DB | Expo SQLite | Recommended |
-| Data access | Drizzle or direct SQLite | Open choice |
+| Local DB | Expo SQLite | Foundation implemented; native verification pending |
+| Data access | Direct Expo SQLite with typed repositories | Approved for MVP |
 | UI state | Zustand only where useful | Recommended |
 | Forms | React Hook Form | Recommended |
 | Validation | Zod | Recommended |

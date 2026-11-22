@@ -1,14 +1,17 @@
 import { Image } from 'expo-image';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useState } from 'react';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { AddExpenseForm } from '@/components/expenses/add-expense-form';
 import { AmountDisplay } from '@/components/ui/amount-display';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { SectionHeader } from '@/components/ui/section-header';
 import { Spacing } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 const sources = [
   { name: 'Main bank account', type: 'Bank account', balance: '₹42,500' },
@@ -21,19 +24,26 @@ const recentActivity = [
 ];
 
 export default function HomeScreen() {
+  const [isAddExpenseVisible, setAddExpenseVisible] = useState(false);
+  const scheme = useColorScheme();
+  const { width, fontScale } = useWindowDimensions();
+  const stackSummaries = width < 360 || fontScale > 1.2;
+
   return (
     <ThemedView style={styles.screen}>
-      <SafeAreaView edges={['top']}>
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={styles.screen}>
+        <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
             <Image
-              source={require('@/assets/images/arthika-logo-horizontal-color.png')}
+              source={scheme === 'dark'
+                ? require('@/assets/images/arthika-logo-horizontal-reversed.png')
+                : require('@/assets/images/arthika-logo-horizontal-color.png')}
               contentFit="contain"
               style={styles.logo}
               accessibilityLabel="ARTHIKA"
             />
             <ThemedText type="small" themeColor="textSecondary">
-              Sunday, 15 November
+              Sample overview · November
             </ThemedText>
           </View>
 
@@ -51,15 +61,15 @@ export default function HomeScreen() {
             </ThemedText>
           </Card>
 
-          <View style={styles.summaryRow}>
+          <View style={[styles.summaryRow, stackSummaries && styles.stacked]}>
             <Card style={styles.summaryCard}>
-              <AmountDisplay label="Spent this month" amount="₹8,420" />
+              <AmountDisplay label="Spent this month" amount="₹8,420" size="compact" />
               <ThemedText type="small" themeColor="textSecondary">
                 November
               </ThemedText>
             </Card>
             <Card style={styles.summaryCard}>
-              <AmountDisplay label="Upcoming commitments" amount="₹12,000" />
+              <AmountDisplay label="Upcoming commitments" amount="₹12,000" size="compact" />
               <ThemedText type="small" themeColor="textSecondary">
                 Next 30 days
               </ThemedText>
@@ -67,9 +77,9 @@ export default function HomeScreen() {
           </View>
 
           <View style={styles.actions}>
-            <Button label="Add expense" />
-            <Button label="Transfer" variant="secondary" />
-            <Button label="Update balance" variant="ghost" />
+            <Button label="Add expense" onPress={() => setAddExpenseVisible(true)} />
+            <Button label="Transfer" variant="secondary" disabled />
+            <Button label="Update balance" variant="ghost" disabled />
           </View>
 
           <View style={styles.section}>
@@ -77,7 +87,7 @@ export default function HomeScreen() {
             <Card>
               {sources.map((source) => (
                 <View key={source.name} style={styles.listRow}>
-                  <View>
+                  <View style={styles.rowDetails}>
                     <ThemedText type="smallBold">{source.name}</ThemedText>
                     <ThemedText type="small" themeColor="textSecondary">
                       {source.type}
@@ -94,7 +104,7 @@ export default function HomeScreen() {
             <Card>
               {recentActivity.map((activity) => (
                 <View key={activity.title} style={styles.listRow}>
-                  <View>
+                  <View style={styles.rowDetails}>
                     <ThemedText type="smallBold">{activity.title}</ThemedText>
                     <ThemedText type="small" themeColor="textSecondary">
                       {activity.meta}
@@ -107,19 +117,28 @@ export default function HomeScreen() {
           </View>
         </ScrollView>
       </SafeAreaView>
+      <Modal
+        visible={isAddExpenseVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setAddExpenseVisible(false)}>
+        <AddExpenseForm onClose={() => setAddExpenseVisible(false)} />
+      </Modal>
     </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  content: { gap: Spacing.four, padding: Spacing.four, paddingBottom: Spacing.six },
+  content: { width: '100%', maxWidth: 600, alignSelf: 'center', gap: Spacing.four, padding: Spacing.four, paddingBottom: Spacing.six },
   header: { alignItems: 'flex-start', gap: Spacing.two },
   logo: { width: 156, height: 40 },
   greeting: { gap: Spacing.one },
   balanceCard: { gap: Spacing.two },
   summaryRow: { flexDirection: 'row', gap: Spacing.two },
-  summaryCard: { flex: 1, padding: Spacing.three },
+  stacked: { flexDirection: 'column' },
+  summaryCard: { flex: 1, minWidth: 0, padding: Spacing.three },
+  rowDetails: { flex: 1 },
   actions: { gap: Spacing.two },
   section: { gap: Spacing.two },
   listRow: {

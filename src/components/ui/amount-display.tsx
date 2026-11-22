@@ -8,9 +8,10 @@ type AmountDisplayProps = {
   amount: string;
   label?: string;
   masked?: boolean;
+  size?: 'default' | 'compact';
 };
 
-export function AmountDisplay({ amount, label, masked = false }: AmountDisplayProps) {
+export function AmountDisplay({ amount, label, masked = false, size = 'default' }: AmountDisplayProps) {
   return (
     <View style={styles.container}>
       {label && (
@@ -18,7 +19,10 @@ export function AmountDisplay({ amount, label, masked = false }: AmountDisplayPr
           {label}
         </ThemedText>
       )}
-      <ThemedText type="amount" accessibilityLabel={masked ? 'Amount hidden' : amount}>
+      <ThemedText
+        type="amount"
+        style={[styles.amount, size === 'compact' && styles.compact]}
+        accessibilityLabel={masked ? 'Amount hidden' : amount}>
         {masked ? '••••••' : amount}
       </ThemedText>
     </View>
@@ -28,5 +32,12 @@ export function AmountDisplay({ amount, label, masked = false }: AmountDisplayPr
 const styles = StyleSheet.create({
   container: {
     gap: Spacing.one,
+  },
+  amount: {
+    fontVariant: ['tabular-nums'],
+  },
+  compact: {
+    fontSize: 24,
+    lineHeight: 30,
   },
 });

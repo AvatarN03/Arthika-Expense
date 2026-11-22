@@ -10,24 +10,27 @@ type ButtonProps = PressableProps & {
   variant?: 'primary' | 'secondary' | 'ghost';
 };
 
-export function Button({ label, variant = 'primary', style, ...props }: ButtonProps) {
+export function Button({ label, variant = 'primary', style, disabled, accessibilityState, ...props }: ButtonProps) {
   const theme = useTheme();
 
   return (
     <Pressable
       accessibilityRole="button"
-      style={({ pressed }) => [
+      disabled={disabled}
+      accessibilityState={{ ...accessibilityState, disabled: Boolean(disabled) }}
+      style={(state) => [
         styles.base,
         { backgroundColor: variant === 'primary' ? theme.primary : 'transparent' },
         variant === 'secondary' && { borderColor: theme.border, borderWidth: 1 },
         variant === 'ghost' && styles.ghost,
-        pressed && styles.pressed,
-        typeof style === 'function' ? style({ pressed, hovered: false }) : style,
+        state.pressed && styles.pressed,
+        disabled && styles.disabled,
+        typeof style === 'function' ? style(state) : style,
       ]}
       {...props}>
       <ThemedText
         type="smallBold"
-        themeColor={variant === 'primary' ? 'background' : 'primary'}>
+        themeColor={variant === 'primary' ? 'primaryForeground' : 'primary'}>
         {label}
       </ThemedText>
     </Pressable>
@@ -48,5 +51,8 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.72,
+  },
+  disabled: {
+    opacity: 0.45,
   },
 });
