@@ -1,6 +1,6 @@
 # ARTHIKA website prototype
 
-A standalone landing page in the same repository as the Expo mobile app. Built with HTML, CSS, and vanilla JavaScript. It uses copies of the existing ARTHIKA vector logos and self-hosted Manrope and Instrument Serif fonts. No photos, external font requests, runtime packages, or app imports. Node.js 22 or newer runs the local tools; production is static files.
+A standalone landing page in the same repository as the Expo mobile app. Built with HTML, CSS, and vanilla JavaScript. It uses copies of the existing ARTHIKA vector logos and self-hosted Manrope (variable, 200–800) and Instrument Serif fonts. No photos, external font requests, runtime packages, or app imports. Node.js 22 or newer runs the local tools; production is static files.
 
 ## Structure
 
@@ -88,4 +88,4 @@ This prototype does not add analytics, sign-up, persistence, or a backend.
 
 The SVGs in [assets/brand](./assets/brand) are unmodified copies of the color horizontal logo, reversed horizontal logo, and color symbol in the repository's original [ARTHIKA logo assets](../assets/ARTHIKA-logos/svg). The original app assets stay untouched. Website branding is self-contained for deployment with Vercel's outside-root access disabled.
 
-[Manrope](https://fonts.google.com/specimen/Manrope) (regular, semibold, extra bold) and [Instrument Serif](https://fonts.google.com/specimen/Instrument+Serif) (italic) are served locally. Their SIL Open Font License files are included in [assets/fonts](./assets/fonts).
+[Manrope](https://fonts.google.com/specimen/Manrope) (variable, weights 200–800) and [Instrument Serif](https://fonts.google.com/specimen/Instrument+Serif) (italic) are served locally. Their SIL Open Font License files are included in [assets/fonts](./assets/fonts).

@@ -11,7 +11,7 @@ const files = new Map([
   ...['logo.svg', 'logo-reversed.svg', 'symbol.svg'].map((file) => [
     `/assets/brand/${file}`, [`assets/brand/${file}`, 'image/svg+xml'],
   ]),
-  ...['manrope-regular.ttf', 'manrope-semibold.ttf', 'manrope-extrabold.ttf', 'instrument-serif-italic.ttf'].map((file) => [
+  ...['manrope-variable.ttf', 'instrument-serif-italic.ttf'].map((file) => [
     `/assets/fonts/${file}`, [`assets/fonts/${file}`, 'font/ttf'],
   ]),
 ]);
