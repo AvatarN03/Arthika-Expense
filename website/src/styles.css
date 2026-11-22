@@ -796,6 +796,34 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Scrollbar follows the same ink/green palette as the rest of the page. */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--green) var(--line);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--line);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--green);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ink);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--paper);
+}
+
 .brand {
   display: inline-flex;
 }
