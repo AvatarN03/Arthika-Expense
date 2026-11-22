@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0F3D2E" />
+    <meta name="description" content="Meet ARTHIKA, a personal money app in development. Explore the idea: clearer balances, everyday spending, and upcoming commitments." />
+    <title>ARTHIKA — A little clarity for your money.</title>
+    <link rel="icon" type="image/svg+xml" href="./assets/brand/symbol.svg" />
+    <link rel="preload" href="./assets/fonts/manrope-regular.ttf" as="font" type="font/ttf" crossorigin />
+    <link rel="preload" href="./assets/fonts/instrument-serif-italic.ttf" as="font" type="font/ttf" crossorigin />
+    <link rel="stylesheet" href="./src/styles.css" />
+    <script type="module" src="./src/main.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header wrap">
+      <a class="brand" href="#" aria-label="ARTHIKA home"><img src="./assets/brand/logo.svg" width="397" height="100" alt="ARTHIKA" /></a>
+      <nav aria-label="Main navigation">
+        <a href="#the-idea">The idea</a>
+        <a href="#a-closer-look">A closer look</a>
+        <a class="nav-cta" href="#download">Android release</a>
+      </nav>
+    </header>
+    <main id="main">
+      <section class="hero wrap" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="small-line" aria-hidden="true"></span> A PERSONAL MONEY APP, IN THE MAKING</p>
+          <h1 id="hero-title">Your money.<br />Less guesswork.<br /><em>More clarity.</em></h1>
+          <p class="hero-description">The bank account. The cash in your pocket. The payments coming up. ARTHIKA is being built to bring your everyday money into one clear picture.</p>
+          <div class="hero-actions"><a class="button button-dark" href="#a-closer-look">Explore ARTHIKA</a><a class="text-link" href="#download">Android release status</a></div>
+          <p class="quiet-note">Made for everyday life. Currently in development.</p>
+        </div>
+        <div class="hero-visual">
+          <div class="visual-heading"><span>A CLEARER PICTURE</span><span>THE ARTHIKA WAY</span></div>
+          <div class="balance-preview" aria-label="Illustrative balance overview">
+            <div class="preview-top"><img class="preview-logo" src="./assets/brand/logo.svg" width="397" height="100" alt="ARTHIKA" /><span class="sample-label">SAMPLE DATA</span></div>
+            <p class="preview-label">Total tracked balance</p>
+            <p class="big-balance" data-amount="45700">₹45,700<span>.00</span></p>
+            <div class="balance-divider"></div>
+            <div class="source-row"><span><i class="source-icon bank" aria-hidden="true">▥</i>Bank account</span><strong data-amount="42500">₹42,500</strong></div>
+            <div class="source-row"><span><i class="source-icon cash" aria-hidden="true">₹</i>Everyday cash</span><strong data-amount="3200">₹3,200</strong></div>
+            <div class="preview-bottom"><span>Two sources. One picture.</span><button class="privacy-toggle" type="button" aria-pressed="false" aria-label="Hide sample balances">Hide balances</button></div>
+          </div>
+          <div class="commitment-preview"><span class="calendar-icon" aria-hidden="true">28<span>NOV</span></span><div><span class="preview-label">A little heads-up</span><strong>Laptop EMI</strong><span>Upcoming commitment · Sample</span></div><strong>₹4,000</strong></div>
+          <div class="visual-footer"><img class="visual-symbol" src="./assets/brand/symbol.svg" width="100" height="100" alt="" /><p>A place for every rupee.<br /><strong>A little less on your mind.</strong></p><span class="handwritten" aria-hidden="true">that's the idea.</span></div>
+        </div>
+      </section>
+      <section class="idea-section wrap" id="the-idea" aria-labelledby="idea-title">
+        <div class="idea-margin">
+          <p class="eyebrow">THE THOUGHT BEHIND IT</p>
+          <img src="./assets/brand/symbol.svg" width="100" height="100" alt="" class="idea-symbol" />
+          <p class="margin-note">For the money you earn.<br />And the life it goes into.</p>
+        </div>
+        <div class="idea-story">
+          <h2 id="idea-title">A bank balance only<br />tells <em>part of the story.</em></h2>
+          <p class="story-lead">There's cash in your pocket. A wallet you sometimes forget about. An EMI due before the month ends.</p>
+          <p>ARTHIKA starts with a simple idea: bring those pieces together. Keep a record of what you spend, what you move, and what's coming up. So when you ask “where did it all go?”, you have somewhere to look.</p>
+          <div class="story-note"><span>MANUAL BY DESIGN</span><p>Your records. Your tracked balances.<br />No live bank connection implied.</p></div>
+        </div>
+      </section>
+      <section class="closer-section wrap" id="a-closer-look" aria-labelledby="closer-title">
+        <div class="closer-copy"><p class="eyebrow">A PAGE FROM EVERYDAY LIFE</p><h2 id="closer-title">The coffee. The cash.<br /><em>The end of the month.</em></h2><p>A few familiar moments, and how they could look in ARTHIKA. Choose one to see the idea in practice.</p><div class="scenario-controls" role="group" aria-label="Choose an example"><button type="button" data-scenario="expense" aria-pressed="true">An expense</button><button type="button" data-scenario="transfer" aria-pressed="false">A transfer</button><button type="button" data-scenario="commitment" aria-pressed="false">A commitment</button></div><p class="demo-note">Illustrative sample data. Nothing here is saved.</p></div>
+        <div class="scenario-card" aria-live="polite" aria-atomic="true"><span class="sample-label">ILLUSTRATIVE EXAMPLE</span><div class="scenario-symbol" id="scenario-symbol" aria-hidden="true">−</div><h3 id="scenario-title">Coffee on the way.</h3><p id="scenario-description">You spend ₹180 from everyday cash. Your cash balance goes down, and the expense has a place in your history.</p><div class="scenario-detail"><span id="scenario-detail-label">Everyday cash</span><strong id="scenario-detail-value">₹3,200 → ₹3,020</strong></div><p class="scenario-footnote" id="scenario-footnote">Spending is recorded once, against the right source.</p></div>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <div class="footer-top wrap">
+        <div class="footer-intro"><a class="brand footer-brand" href="#" aria-label="ARTHIKA home"><img src="./assets/brand/logo-reversed.svg" width="397" height="100" alt="ARTHIKA" /></a><p>A little clarity for your money.<br />A little space for everything else.</p></div>
+        <section class="release-note" id="download" aria-labelledby="download-title"><p class="eyebrow">FROM THE WORKBENCH</p><h2 id="download-title">Android, in the making.</h2><p>The app is still being built. When a standalone APK is ready, you'll find the download here.</p><button class="release-button" id="download-button" type="button" aria-describedby="download-status">Check release status</button><p id="download-status" role="status">Prototype · No APK published yet.</p></section>
+      </div>
+      <div class="footer-meta wrap"><span>Made for the everyday.</span><a href="#">Back to the beginning</a><span>ARTHIKA © <span id="year">2026</span></span></div>
+      <div class="footer-signature wrap" aria-hidden="true"><svg viewBox="0 0 1200 250" focusable="false"><text x="0" y="224" textLength="1200" lengthAdjust="spacingAndGlyphs">ARTHIKA</text></svg></div>
+    </footer>
+  </body>
+</html>
