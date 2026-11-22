@@ -1158,6 +1158,8 @@ em {
 
 .footer-signature {
   padding-bottom: 0;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .footer-signature svg {
