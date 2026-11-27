@@ -33,10 +33,12 @@ test('failed upgrade rolls back the production source schema and version togethe
   const client = connect();
   try {
     await assert.rejects(migrateDatabase(client, [...migrations, {
-      version: 2, name: 'intentional-test-failure', up: async () => { throw new Error('test rollback'); },
+      version: migrations.length + 1,
+      name: 'intentional-test-failure', up: async () => { throw new Error('test rollback'); },
     }]), /test rollback/);
     assert.equal((await client.withSession((db) => db.getFirstAsync('PRAGMA user_version'))).user_version, 0);
     assert.equal(await client.withSession((db) => db.getFirstAsync("SELECT name FROM sqlite_master WHERE name = 'money_sources'")), null);
+    assert.equal(await client.withSession((db) => db.getFirstAsync("SELECT name FROM sqlite_master WHERE name = 'transactions'")), null);
     await initializeDatabase(client);
     assert.deepEqual(await createMoneySourceRepository(client).list(), []);
   } finally { await client.close(); }

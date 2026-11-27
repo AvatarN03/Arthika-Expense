@@ -42,7 +42,7 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
-    "test:database": "node --test tests/database.test.cjs tests/money-sources.test.cjs"
+    "test:database": "node --test tests/database.test.cjs tests/money-sources.test.cjs tests/transactions.test.cjs"
   },
   "private": true
 }
