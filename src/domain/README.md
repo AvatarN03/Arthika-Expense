@@ -23,3 +23,15 @@ atomic; that belongs to the transfer repository/application layer.
 currency. It never converts currencies or adds different currencies together.
 Archived/voided filtering is a caller decision because the domain module does
 not know UI or lifecycle policy.
+
+## Expense
+
+[expense.ts](./expense.ts) exposes `validateExpense(input)`, a pure function
+that validates and normalizes a user-supplied expense and returns the exact
+values a repository should persist, or throws a descriptive error for the first
+invalid field. Amounts must be positive safe integers in minor units, the
+source ID must be non-empty, and the timestamp must be a valid ISO instant with
+a timezone. Description and payment method are optional text that is trimmed
+and stored as `null` when blank. The transaction repository's `createExpense`
+uses this module so screens, repositories, and future flows share one
+validation path.

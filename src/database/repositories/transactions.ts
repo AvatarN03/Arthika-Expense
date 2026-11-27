@@ -1,3 +1,4 @@
+import { validateExpense } from '../../domain/expense';
 import type { DatabaseClient, DatabaseSession } from '../client';
 
 export type TransactionType = 'expense' | 'transfer' | 'adjustment';
@@ -100,15 +101,6 @@ function normalizeRequiredText(value: string, label: string): string {
   return value.trim();
 }
 
-function normalizeOptionalText(value: string | null | undefined, label: string): string | null {
-  if (value === null || value === undefined) return null;
-  if (typeof value !== 'string' || value.includes('\0')) {
-    throw new Error(`${label} cannot contain null characters.`);
-  }
-  if (value.trim() === '') return null;
-  return value.trim();
-}
-
 function normalizeAmount(value: number): number {
   if (!Number.isSafeInteger(value) || value <= 0) {
     throw new Error('Transaction amount must be a positive safe integer in minor units.');
@@ -177,13 +169,15 @@ async function insert(
 export function createTransactionRepository(client: DatabaseClient) {
   return {
     createExpense(input: CreateExpense): Promise<Transaction> {
-      const base = normalizeBase(input);
+      const expense = validateExpense(input);
       return insert(client, {
-        ...base,
         type: 'expense',
         direction: 'debit',
-        description: normalizeOptionalText(input.description, 'Description'),
-        paymentMethod: normalizeOptionalText(input.paymentMethod, 'Payment method'),
+        amountMinor: expense.amountMinor,
+        sourceId: expense.sourceId,
+        description: expense.description,
+        paymentMethod: expense.paymentMethod,
+        occurredAt: expense.occurredAt,
       });
     },
 

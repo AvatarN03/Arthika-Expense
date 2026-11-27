@@ -39,13 +39,13 @@ The app foundation and database infrastructure are implemented.
 - Money-source validation, creation, listing, detail lookup, editing, and archive behavior
 - Transaction migration and repository for expenses and debit/credit adjustments
 - Pure balance calculation from opening balances and ledger entries
+- Pure expense validation shared by the domain, repository, and future expense UI
 - Database-backed Sources screen for listing, creating, and archiving sources
 - Money input parsing and display formatting helpers
 - Node/real-SQLite and domain tests plus web SQLite smoke checks
 
 ### In progress or not yet implemented
 
-- Cross-restart and native verification
 - Expense creation and persistence
 - Transfer persistence and activity
 - Balance adjustments and cash reconciliation
@@ -81,7 +81,7 @@ src/
   components/         Shared UI and expense components
   constants/          Theme tokens
   database/           SQLite connection, migrations, and repositories
-  domain/             Pure financial rules such as balance calculation
+  domain/             Pure financial rules such as balance and expense validation
   hooks/              Shared React hooks
   lib/                Money input and display helpers
 docs/                 Product, architecture, database, and roadmap documents
@@ -121,7 +121,7 @@ npm run lint
 npm test
 ```
 
-`npm test` runs both suites. Database tests use isolated real-SQLite databases and cover migrations, bindings, foreign keys, transactions, queued access, schema downgrade rejection, close/reopen behavior, WAL setup, money-source repository rules, transaction repository rules, ledger projection, ledger-to-balance integration, and full close/reopen restart persistence. Domain tests cover signed balance effects, per-source balances, per-currency totals, transfer pairing, validation, safe-integer overflow, and money input/format helpers.
+`npm test` runs both suites. Database tests use isolated real-SQLite databases and cover migrations, bindings, foreign keys, transactions, queued access, schema downgrade rejection, close/reopen behavior, WAL setup, money-source repository rules, transaction repository rules, ledger projection, ledger-to-balance integration, and full close/reopen restart persistence. Domain tests cover signed balance effects, per-source balances, per-currency totals, transfer pairing, validation, safe-integer overflow, money input/format helpers, and expense validation.
 
 ## Web development
 

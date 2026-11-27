@@ -1,6 +1,23 @@
 # ARTHIKA progress
 
-## Latest checkpoint: Phase 3.6 verify persistence across restarts
+## Latest checkpoint: Phase 4.1 expense domain validation
+
+- Added a pure expense validation module in `src/domain/expense.ts` that
+  validates and normalizes an expense input (positive safe-integer amount in
+  minor units, non-empty source ID, ISO timestamp with timezone, optional
+  trimmed description and payment method) and returns a typed, normalized
+  expense or throws a descriptive error.
+- The transaction repository's `createExpense` now consumes this module, so the
+  repository, domain, and future expense-creation UI share one validation path.
+  Adjustment validation is untouched.
+- Added Node unit tests in `tests/expense.test.cjs` covering valid input,
+  normalization, optional-field handling, and invalid/boundary cases.
+- Fourteen database tests and seventeen domain/helper tests pass. TypeScript,
+  whole-project lint, and an Expo web production export pass.
+- Interactive browser persistence and Android/Expo Go checks remain pending.
+- Next proposed subtask: Phase 4.2 expense creation persistence, after review.
+
+## Previous checkpoint: Phase 3.6 verify persistence across restarts (historical)
 
 - Added a connection-level restart test in `tests/persistence.test.cjs` that
   writes sources and transactions through the repository layer, closes the
@@ -196,8 +213,8 @@ Usage and verification details: [database README](../src/database/README.md).
 ## Database work still outstanding
 
 Direct SQLite, its connection/migration foundation, the money-source and
-transaction schemas/repositories, the pure balance calculation, and the
-database-backed Sources screen are implemented. Cross-restart verification,
-transaction UI, transfers, reconciliation, and EMI persistence remain
-unimplemented. Android runtime checks remain pending. Do not start Phase 4.1
-automatically.
+transaction schemas/repositories, the pure balance calculation, the
+database-backed Sources screen, restart persistence verification, and expense
+domain validation are implemented. Expense persistence, transaction UI,
+transfers, reconciliation, and EMI persistence remain unimplemented. Android
+runtime checks remain pending. Do not start Phase 4.2 automatically.
