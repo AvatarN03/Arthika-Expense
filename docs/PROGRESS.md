@@ -1,6 +1,26 @@
 # ARTHIKA progress
 
-## Latest checkpoint: Phase 4.1 expense domain validation
+## Latest checkpoint: Phase 4.2 expense creation persistence
+
+- The Add Expense form now writes to the local ledger instead of being a
+  preview-only flow.
+- It loads active money sources from the database for the source selector,
+  converts the typed amount to exact integer minor units with
+  `parseMajorToMinor`, validates through `validateExpense`, and persists with
+  the transaction repository's `createExpense`.
+- The occurred-at timestamp is stamped as the current time (there is no date
+  picker yet); the free-text date field was removed. Categories remain
+  display-only because the schema has no category column yet.
+- The form shows saving/saved/error states, disables inputs and the save button
+  while saving, guards against double submission, and surfaces source-load
+  failures.
+- Added an integration test mirroring the form's write path (parse → validate →
+  createExpense). Fifteen database tests and seventeen domain/helper tests
+  pass; TypeScript, lint, and an Expo web export pass.
+- Interactive browser persistence and Android/Expo Go checks remain pending.
+- Next proposed subtask: Phase 4.3 source balance/activity update, after review.
+
+## Previous checkpoint: Phase 4.1 expense domain validation (historical)
 
 - Added a pure expense validation module in `src/domain/expense.ts` that
   validates and normalizes an expense input (positive safe-integer amount in
@@ -214,7 +234,8 @@ Usage and verification details: [database README](../src/database/README.md).
 
 Direct SQLite, its connection/migration foundation, the money-source and
 transaction schemas/repositories, the pure balance calculation, the
-database-backed Sources screen, restart persistence verification, and expense
-domain validation are implemented. Expense persistence, transaction UI,
-transfers, reconciliation, and EMI persistence remain unimplemented. Android
-runtime checks remain pending. Do not start Phase 4.2 automatically.
+database-backed Sources screen, restart persistence verification, expense
+domain validation, and expense creation persistence are implemented. Source
+balance/activity refresh, transfers, reconciliation, and EMI persistence remain
+unimplemented. Android runtime checks remain pending. Do not start Phase 4.3
+automatically.

@@ -10,6 +10,8 @@ const { migrateDatabase, migrations } = require('../src/database/migrations/inde
 const { createMoneySourceRepository } = require('../src/database/repositories/money-sources.ts');
 const { createTransactionRepository } = require('../src/database/repositories/transactions.ts');
 const { calculateTrackedBalances } = require('../src/domain/balance.ts');
+const { validateExpense } = require('../src/domain/expense.ts');
+const { parseMajorToMinor } = require('../src/lib/money.ts');
 const { runTransactionChecks, verifyTransactionPersistence } = require('./transaction-checks.ts');
 
 test('transaction repository rules run against real SQLite', async () => {
@@ -57,6 +59,35 @@ test('repository ledger entries feed tracked balances', async () => {
       sourceId: cash.id, currencyCode: 'INR', balanceMinor: 2000,
     });
     assert.deepEqual(result.totals, [{ currencyCode: 'INR', totalMinor: 51285 }]);
+  } finally { await client.close(); }
+});
+
+test('add-expense form path converts and persists an expense', async () => {
+  const client = connect();
+  try {
+    await initializeDatabase(client, { enableWAL: false });
+    const sources = createMoneySourceRepository(client);
+    const transactions = createTransactionRepository(client);
+    const bank = await sources.create({
+      name: 'Main bank', type: 'bank', openingBalanceMinor: 50000, currencyCode: 'INR',
+    });
+
+    // Mirror the form: text amount -> minor units, validate, then create.
+    const amountMinor = parseMajorToMinor('1,250.75');
+    const expense = validateExpense({
+      amountMinor,
+      sourceId: bank.id,
+      occurredAt: new Date('2026-11-22T10:00:00Z').toISOString(),
+      description: 'Groceries',
+    });
+    const saved = await transactions.createExpense(expense);
+
+    assert.equal(saved.type, 'expense');
+    assert.equal(saved.direction, 'debit');
+    assert.equal(saved.amountMinor, 125075);
+    assert.equal(saved.sourceId, bank.id);
+    assert.equal(saved.description, 'Groceries');
+    assert.equal((await transactions.listLedgerEntries()).length, 1);
   } finally { await client.close(); }
 });
 
