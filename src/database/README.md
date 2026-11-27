@@ -61,11 +61,11 @@ session rather than nest repository transactions.
   Update/archive return `null` for an unknown ID.
 
 The repository maps SQL names and integer flags to typed camelCase fields and
-booleans. It does not provide a live query subscription: a future screen must
-refresh state after a successful write. No screen consumes it yet. Opening
-balances are signed safe integers; currency is explicit uppercase three-letter
-text, not an implicit INR default or a promise of multi-currency conversion.
-The API deliberately has no delete, opening-balance update, or currency update.
+booleans. It does not provide a live query subscription: the Sources screen
+reloads after a successful write. Opening balances are signed safe integers;
+currency is explicit uppercase three-letter text, not an implicit INR default
+or a promise of multi-currency conversion. The API deliberately has no delete,
+opening-balance update, or currency update.
 
 ## Transaction repository
 
@@ -79,6 +79,8 @@ write/read layer. It currently supports:
 - `getById(id)` returns a record or `null`.
 - `list({ sourceId?, type?, limit? })` returns newest-first records, bounded to
   1–100 rows (default 50).
+- `listLedgerEntries()` returns only source ID, direction, and amount for
+  balance calculation. It is not the activity list and has no UI row limit.
 
 Amounts are positive safe-integer minor units; opening balances remain the only
 signed money values. The repository trims optional/required text, canonicalizes
@@ -86,7 +88,9 @@ input timestamps to UTC, rejects archived sources for new writes, and keeps
 SQLite constraints as a second line of defence. `transfer` is a valid stored
 type, but transfer creation is deliberately deferred to Phase 5. There is no
 update, void, delete, category, or EMI-link API yet; the correction policy
-belongs to Phase 4 and must not be guessed here.
+belongs to Phase 4 and must not be guessed here. The Sources screen combines
+`listLedgerEntries()` with the pure balance module; it does not mirror balances
+into a cached database column.
 
 ## Verification
 
@@ -97,9 +101,10 @@ closing, WAL, and file persistence. Source checks cover validation, database
 constraints, integer precision, safe edits, archive/history preservation,
 concurrent inserts, version-zero upgrades, and reopening saved sources.
 Transaction checks cover expense/adjustment creation, validation, constraints,
-ordering/filtering, archived-source write blocking, historical references,
-concurrent writes, version-one upgrades, rollback, and file persistence. The
-tests do not run the Expo native bridge.
+ordering/filtering, the minimal ledger projection, archived-source write
+blocking, historical references, concurrent writes, ledger-to-balance
+integration, version-one upgrades, rollback, and file persistence. The tests do
+not run the Expo native bridge.
 
 [The browser smoke entry](../../scripts/database-smoke.web.ts) is a separate
 development-only bundle, not a route or an app import. It uses databases named

@@ -1,6 +1,36 @@
 # ARTHIKA progress
 
-## Latest checkpoint: Phase 3.4 balance calculation domain function
+## Latest checkpoint: Phase 3.5 database-backed source list/create
+
+- The Sources screen now uses the queued database client and the money-source
+  repository instead of local sample data.
+- It loads active and archived sources, creates sources, archives sources, and
+  refreshes after writes. Loading, load-error/retry, and archive-error states
+  are implemented.
+- Displayed balances are calculated from each source's opening balance plus its
+  ledger entries through the Phase 3.4 domain function. Per-source balances and
+  per-currency totals are shown; archived sources are excluded from the active
+  total.
+- Added `listLedgerEntries()` to the transaction repository: a minimal
+  source/direction/amount projection for balance calculation, separate from the
+  bounded activity list.
+- Added money input/format helpers in `src/lib/money.ts`. Input is converted to
+  exact integer minor units before repository calls; display formatting uses
+  the source currency.
+- The create form prevents duplicate submissions, validates name, amount,
+  currency, and requires a zero-or-greater opening balance. The repository still
+  supports signed opening balances for later reconciliation flows. The form
+  retains the existing visible INR default and assumes two decimal places;
+  supported-currency precision remains an open product decision.
+- No expense creation, transaction writes, transfers, or balance updates are
+  exposed. Update balance remains disabled.
+- Thirteen database tests and eleven domain/helper tests pass. TypeScript,
+  whole-project lint, and an Expo web production export pass.
+- Interactive browser persistence and Android/Expo Go checks remain pending.
+- Next proposed subtask: Phase 3.6 verify source and ledger persistence across
+  app restarts, after review.
+
+## Previous checkpoint: Phase 3.4 balance calculation domain function (historical)
 
 - Added a pure [balance module](../src/domain/balance.ts) with no React, Expo,
   SQLite, or screen imports.
@@ -152,7 +182,8 @@ Usage and verification details: [database README](../src/database/README.md).
 ## Database work still outstanding
 
 Direct SQLite, its connection/migration foundation, the money-source and
-transaction schemas/repositories, and the pure balance calculation are
-implemented. Database-backed source management, transaction UI, transfers,
-reconciliation, and EMI persistence remain unimplemented. Android runtime
-checks remain pending. Do not start Phase 3.5 automatically.
+transaction schemas/repositories, the pure balance calculation, and the
+database-backed Sources screen are implemented. Cross-restart verification,
+transaction UI, transfers, reconciliation, and EMI persistence remain
+unimplemented. Android runtime checks remain pending. Do not start Phase 3.6
+automatically.

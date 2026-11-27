@@ -38,6 +38,12 @@ export type ListTransactionOptions = {
   limit?: number;
 };
 
+export type TransactionLedgerEntry = {
+  sourceId: string;
+  direction: TransactionDirection;
+  amountMinor: number;
+};
+
 type TransactionRow = {
   id: string;
   type: TransactionType;
@@ -49,6 +55,12 @@ type TransactionRow = {
   occurred_at: string;
   created_at: string;
   updated_at: string;
+};
+
+type LedgerRow = {
+  source_id: string;
+  direction: TransactionDirection;
+  amount_minor: number;
 };
 
 type NormalizedTransaction = {
@@ -191,6 +203,23 @@ export function createTransactionRepository(client: DatabaseClient) {
 
     getById(id: string): Promise<Transaction | null> {
       return client.withSession((session) => find(session, id));
+    },
+
+    /**
+     * Minimal source/direction/amount projection for balance calculation.
+     * This is not the activity list and deliberately has no UI row limit.
+     */
+    listLedgerEntries(): Promise<TransactionLedgerEntry[]> {
+      return client.withSession(async (session) => {
+        const rows = await session.getAllAsync<LedgerRow>(
+          'SELECT source_id, direction, amount_minor FROM transactions',
+        );
+        return rows.map((row) => ({
+          sourceId: row.source_id,
+          direction: row.direction,
+          amountMinor: row.amount_minor,
+        }));
+      });
     },
 
     async list(options: ListTransactionOptions = {}): Promise<Transaction[]> {

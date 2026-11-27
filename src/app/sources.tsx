@@ -1,6 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -17,48 +20,107 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { SectionHeader } from '@/components/ui/section-header';
 import { Spacing, Radii } from '@/constants/theme';
+import { useDatabase } from '@/database/database-provider';
+import {
+  createMoneySourceRepository,
+  type CreateMoneySource,
+  type MoneySource,
+  type MoneySourceType,
+} from '@/database/repositories/money-sources';
+import {
+  createTransactionRepository,
+  type TransactionLedgerEntry,
+} from '@/database/repositories/transactions';
+import { calculateTrackedBalances } from '@/domain/balance';
+import { formatMinor, parseMajorToMinor } from '@/lib/money';
 import { useTheme } from '@/hooks/use-theme';
 
-type SourceType = 'bank' | 'cash' | 'wallet';
-
-type Source = {
-  id: string;
-  name: string;
-  type: SourceType;
-  balance: string;
-  currency: string;
-  archived: boolean;
-};
-
-const typeLabel: Record<SourceType, string> = {
+const typeLabel: Record<MoneySourceType, string> = {
   bank: 'Bank account',
   cash: 'Cash',
   wallet: 'Wallet',
 };
 
-const initialSources: Source[] = [
-  { id: '1', name: 'Main bank account', type: 'bank', balance: '₹42,500', currency: 'INR', archived: false },
-  { id: '2', name: 'Everyday cash', type: 'cash', balance: '₹3,200', currency: 'INR', archived: false },
-  { id: '3', name: 'Travel wallet', type: 'wallet', balance: '₹1,800', currency: 'INR', archived: false },
-];
-
 export default function SourcesScreen() {
   const theme = useTheme();
-  const [sources, setSources] = useState<Source[]>(initialSources);
+  const client = useDatabase();
+  const sourceRepository = useMemo(() => createMoneySourceRepository(client), [client]);
+  const transactionRepository = useMemo(() => createTransactionRepository(client), [client]);
+
+  const [sources, setSources] = useState<MoneySource[]>([]);
+  const [ledgerEntries, setLedgerEntries] = useState<TransactionLedgerEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const [isAddVisible, setAddVisible] = useState(false);
+  const [pendingArchiveId, setPendingArchiveId] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const visible = showArchived ? sources : sources.filter((s) => !s.archived);
+  useEffect(() => {
+    let active = true;
 
-  function handleArchive(id: string) {
-    setSources((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, archived: true } : s)),
+    Promise.all([
+      transactionRepository.listLedgerEntries(),
+      sourceRepository.list({ includeArchived: true }),
+    ]).then(([entries, sourceList]) => {
+      if (!active) return;
+      setSources(sourceList);
+      setLedgerEntries(entries);
+      setLoadError(null);
+    }).catch((cause: unknown) => {
+      if (!active) return;
+      setLoadError(cause instanceof Error ? cause.message : 'Unable to load money sources.');
+    }).finally(() => {
+      if (active) setIsLoading(false);
+    });
+
+    return () => { active = false; };
+  }, [sourceRepository, transactionRepository, refreshKey]);
+
+  const balances = useMemo(
+    () => calculateTrackedBalances(sources, ledgerEntries),
+    [sources, ledgerEntries],
+  );
+  const activeSources = useMemo(() => sources.filter((source) => !source.isArchived), [sources]);
+  const activeBalances = useMemo(() => {
+    const activeIds = new Set(activeSources.map((source) => source.id));
+    return calculateTrackedBalances(
+      activeSources,
+      ledgerEntries.filter((entry) => activeIds.has(entry.sourceId)),
     );
+  }, [activeSources, ledgerEntries]);
+  const balanceById = useMemo(
+    () => new Map(balances.sources.map((balance) => [balance.sourceId, balance])),
+    [balances],
+  );
+
+  const visible = showArchived ? sources : activeSources;
+  const activeCount = activeSources.length;
+
+  function refresh() {
+    setIsLoading(true);
+    setLoadError(null);
+    setRefreshKey((value) => value + 1);
   }
 
-  function handleAdd(source: Source) {
-    setSources((prev) => [...prev, source]);
-    setAddVisible(false);
+  async function handleArchive(id: string) {
+    if (pendingArchiveId) return;
+    setPendingArchiveId(id);
+    setActionError(null);
+    try {
+      await sourceRepository.archive(id);
+      refresh();
+    } catch (cause) {
+      setActionError(cause instanceof Error ? cause.message : 'Unable to archive this source.');
+    } finally {
+      setPendingArchiveId(null);
+    }
+  }
+
+  async function handleCreate(input: CreateMoneySource) {
+    await sourceRepository.create(input);
+    refresh();
   }
 
   return (
@@ -72,92 +134,146 @@ export default function SourcesScreen() {
             </ThemedText>
           </View>
 
-          <Card style={styles.totalCard}>
-            <AmountDisplay
-              label="Total tracked balance"
-              amount="₹47,500"
-            />
-            <ThemedText type="small" themeColor="textSecondary">
-              Across {sources.filter((s) => !s.archived).length} active source
-              {sources.filter((s) => !s.archived).length === 1 ? '' : 's'}
-            </ThemedText>
-          </Card>
-
-          <View style={styles.actions}>
-            <Button label="Add source" onPress={() => setAddVisible(true)} />
-            <Pressable
-              onPress={() => setShowArchived((v) => !v)}
-              accessibilityRole="button"
-              style={({ pressed }) => [styles.toggle, pressed && styles.pressed]}>
-              <ThemedText type="smallBold" themeColor="primary">
-                {showArchived ? 'Hide archived' : 'Show archived'}
-              </ThemedText>
-            </Pressable>
-          </View>
-
-          <View style={styles.section}>
-            <SectionHeader
-              title="Sources"
-              subtitle={showArchived ? 'Including archived' : 'Active sources'}
-              accessory={
+          {isLoading && sources.length === 0 ? (
+            <Card style={styles.messageCard}>
+              <View style={styles.loadingRow}>
+                <ActivityIndicator color={theme.primary} />
                 <ThemedText type="small" themeColor="textSecondary">
-                  {visible.length}
+                  Loading money sources…
                 </ThemedText>
-              }
-            />
-
-            {visible.length === 0 ? (
-              <EmptyState
-                title="No sources yet"
-                description="Add a bank account, cash, or wallet to start tracking."
-              />
-            ) : (
-              <View style={styles.list}>
-                {visible.map((source) => (
-                  <Card key={source.id} style={styles.sourceCard}>
-                    <View style={styles.sourceRow}>
-                      <View style={[styles.typeBadge, { backgroundColor: theme.backgroundElement }]}>
-                        <ThemedText type="smallBold" themeColor="primary">
-                          {typeLabel[source.type]}
-                        </ThemedText>
-                      </View>
-                      {source.archived && (
-                        <View style={[styles.archivedBadge, { borderColor: theme.border }]}>
-                          <ThemedText type="small" themeColor="textSecondary">
-                            Archived
-                          </ThemedText>
-                        </View>
-                      )}
-                    </View>
-
-                    <View style={styles.sourceBody}>
-                      <View style={styles.sourceDetails}>
-                        <ThemedText type="smallBold">{source.name}</ThemedText>
-                        <ThemedText type="small" themeColor="textSecondary">
-                          {source.currency}
-                        </ThemedText>
-                      </View>
-                      <ThemedText type="heading">{source.balance}</ThemedText>
-                    </View>
-
-                    {!source.archived && (
-                      <View style={styles.sourceActions}>
-                        <Button label="Update balance" variant="secondary" disabled />
-                        <Pressable
-                          onPress={() => handleArchive(source.id)}
-                          accessibilityRole="button"
-                          style={({ pressed }) => [styles.archiveButton, pressed && styles.pressed]}>
-                          <ThemedText type="small" themeColor="destructive">
-                            Archive
-                          </ThemedText>
-                        </Pressable>
-                      </View>
-                    )}
-                  </Card>
-                ))}
               </View>
-            )}
-          </View>
+            </Card>
+          ) : loadError ? (
+            <Card style={styles.messageCard}>
+              <ThemedText themeColor="destructive" accessibilityRole="alert">
+                {loadError}
+              </ThemedText>
+              <Button
+                label="Try again"
+                variant="secondary"
+                onPress={refresh}
+              />
+            </Card>
+          ) : (
+            <>
+              <Card style={styles.totalCard}>
+                {activeBalances.totals.length === 0 ? (
+                  <AmountDisplay label="Total tracked balance" amount="—" />
+                ) : (
+                  activeBalances.totals.map((total) => (
+                    <AmountDisplay
+                      key={total.currencyCode}
+                      label={activeBalances.totals.length > 1
+                        ? `Total tracked balance · ${total.currencyCode}`
+                        : 'Total tracked balance'}
+                      amount={formatMinor(total.totalMinor, total.currencyCode)}
+                    />
+                  ))
+                )}
+                <ThemedText type="small" themeColor="textSecondary">
+                  {activeCount === 0
+                    ? 'No active sources'
+                    : `Across ${activeCount} active source${activeCount === 1 ? '' : 's'}`}
+                </ThemedText>
+              </Card>
+
+              <View style={styles.actions}>
+                <Button label="Add source" onPress={() => setAddVisible(true)} />
+                <Pressable
+                  onPress={() => setShowArchived((value) => !value)}
+                  accessibilityRole="button"
+                  style={({ pressed }) => [styles.toggle, pressed && styles.pressed]}>
+                  <ThemedText type="smallBold" themeColor="primary">
+                    {showArchived ? 'Hide archived' : 'Show archived'}
+                  </ThemedText>
+                </Pressable>
+              </View>
+
+              {actionError && (
+                <ThemedText themeColor="destructive" accessibilityRole="alert">
+                  {actionError}
+                </ThemedText>
+              )}
+
+              <View style={styles.section}>
+                <SectionHeader
+                  title="Sources"
+                  subtitle={showArchived ? 'Including archived' : 'Active sources'}
+                  accessory={
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {isLoading ? 'Refreshing…' : visible.length}
+                    </ThemedText>
+                  }
+                />
+
+                {visible.length === 0 ? (
+                  <EmptyState
+                    title="No sources yet"
+                    description="Add a bank account, cash, or wallet to start tracking."
+                  />
+                ) : (
+                  <View style={styles.list}>
+                    {visible.map((source) => {
+                      const balanceMinor = balanceById.get(source.id)?.balanceMinor
+                        ?? source.openingBalanceMinor;
+                      const isArchiving = pendingArchiveId === source.id;
+
+                      return (
+                        <Card key={source.id} style={styles.sourceCard}>
+                          <View style={styles.sourceRow}>
+                            <View style={[styles.typeBadge, { backgroundColor: theme.backgroundElement }]}>
+                              <ThemedText type="smallBold" themeColor="primary">
+                                {typeLabel[source.type]}
+                              </ThemedText>
+                            </View>
+                            {source.isArchived && (
+                              <View style={[styles.archivedBadge, { borderColor: theme.border }]}>
+                                <ThemedText type="small" themeColor="textSecondary">
+                                  Archived
+                                </ThemedText>
+                              </View>
+                            )}
+                          </View>
+
+                          <View style={styles.sourceBody}>
+                            <View style={styles.sourceDetails}>
+                              <ThemedText type="smallBold">{source.name}</ThemedText>
+                              <ThemedText type="small" themeColor="textSecondary">
+                                {source.currencyCode}
+                              </ThemedText>
+                            </View>
+                            <ThemedText type="heading">
+                              {formatMinor(balanceMinor, source.currencyCode)}
+                            </ThemedText>
+                          </View>
+
+                          {!source.isArchived && (
+                            <View style={styles.sourceActions}>
+                              <Button label="Update balance" variant="secondary" disabled />
+                              <Pressable
+                                onPress={() => { void handleArchive(source.id); }}
+                                disabled={pendingArchiveId !== null}
+                                accessibilityRole="button"
+                                accessibilityState={{ disabled: pendingArchiveId !== null }}
+                                style={({ pressed }) => [
+                                  styles.archiveButton,
+                                  pressed && styles.pressed,
+                                  pendingArchiveId !== null && styles.disabled,
+                                ]}>
+                                <ThemedText type="small" themeColor="destructive">
+                                  {isArchiving ? 'Archiving…' : 'Archive'}
+                                </ThemedText>
+                              </Pressable>
+                            </View>
+                          )}
+                        </Card>
+                      );
+                    })}
+                  </View>
+                )}
+              </View>
+            </>
+          )}
         </ScrollView>
       </SafeAreaView>
 
@@ -166,7 +282,12 @@ export default function SourcesScreen() {
         animationType="slide"
         presentationStyle="pageSheet"
         onRequestClose={() => setAddVisible(false)}>
-        <AddSourceForm onClose={() => setAddVisible(false)} onAdd={handleAdd} />
+        {isAddVisible && (
+          <AddSourceForm
+            onClose={() => setAddVisible(false)}
+            onSave={handleCreate}
+          />
+        )}
       </Modal>
     </ThemedView>
   );
@@ -174,44 +295,68 @@ export default function SourcesScreen() {
 
 type AddSourceFormProps = {
   onClose: () => void;
-  onAdd: (source: Source) => void;
+  onSave: (input: CreateMoneySource) => Promise<void>;
 };
 
-function AddSourceForm({ onClose, onAdd }: AddSourceFormProps) {
+function AddSourceForm({ onClose, onSave }: AddSourceFormProps) {
   const theme = useTheme();
   const [name, setName] = useState('');
-  const [type, setType] = useState<SourceType>('bank');
+  const [type, setType] = useState<MoneySourceType>('bank');
   const [balance, setBalance] = useState('');
   const [currency, setCurrency] = useState('INR');
   const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const savingRef = useRef(false);
 
-  function handleSave() {
-    if (!name.trim()) {
+  async function handleSave() {
+    if (savingRef.current) return;
+
+    const trimmedName = name.trim();
+    if (!trimmedName) {
       setError('Source name is required.');
       return;
     }
-    const parsed = Number(balance);
-    if (!balance.trim() || !Number.isFinite(parsed) || parsed < 0) {
-      setError('Enter a valid opening balance.');
+
+    let openingBalanceMinor: number;
+    try {
+      openingBalanceMinor = parseMajorToMinor(balance);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Enter a valid opening balance.');
       return;
     }
+    if (openingBalanceMinor < 0) {
+      setError('Opening balance must be zero or greater.');
+      return;
+    }
+
+    const currencyCode = currency.trim().toUpperCase();
+    if (!/^[A-Z]{3}$/.test(currencyCode)) {
+      setError('Use a three-letter currency code such as INR.');
+      return;
+    }
+
+    savingRef.current = true;
+    setIsSaving(true);
     setError(null);
-    onAdd({
-      id: String(Date.now()),
-      name: name.trim(),
-      type,
-      balance: `₹${parsed.toLocaleString('en-IN')}`,
-      currency: currency.trim().toUpperCase() || 'INR',
-      archived: false,
-    });
+    try {
+      await onSave({ name: trimmedName, type, openingBalanceMinor, currencyCode });
+      onClose();
+    } catch (cause) {
+      savingRef.current = false;
+      setError(cause instanceof Error ? cause.message : 'Unable to save this source.');
+      setIsSaving(false);
+    }
   }
 
-  const types: SourceType[] = ['bank', 'cash', 'wallet'];
+  const types: MoneySourceType[] = ['bank', 'cash', 'wallet'];
 
   return (
     <SafeAreaView style={styles.modalScreen}>
-      <ScrollView contentContainerStyle={styles.modalContent} keyboardShouldPersistTaps="handled">
-        <View style={styles.modalHeader}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : Platform.OS === 'android' ? 'height' : undefined}
+        style={styles.modalScreen}>
+        <ScrollView contentContainerStyle={styles.modalContent} keyboardShouldPersistTaps="handled">
+          <View style={styles.modalHeader}>
           <View style={styles.modalHeaderText}>
             <ThemedText type="heading">Add source</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
@@ -220,9 +365,15 @@ function AddSourceForm({ onClose, onAdd }: AddSourceFormProps) {
           </View>
           <Pressable
             onPress={onClose}
+            disabled={isSaving}
             accessibilityRole="button"
             accessibilityLabel="Close"
-            style={({ pressed }) => [styles.closeButton, { backgroundColor: theme.backgroundElement }, pressed && styles.pressed]}>
+            style={({ pressed }) => [
+              styles.closeButton,
+              { backgroundColor: theme.backgroundElement },
+              pressed && styles.pressed,
+              isSaving && styles.disabled,
+            ]}>
             <ThemedText type="heading" themeColor="textSecondary">
               ×
             </ThemedText>
@@ -233,10 +384,11 @@ function AddSourceForm({ onClose, onAdd }: AddSourceFormProps) {
           <ThemedText type="label">Name</ThemedText>
           <Input
             value={name}
-            onChangeText={(v) => {
-              setName(v);
+            onChangeText={(value) => {
+              setName(value);
               setError(null);
             }}
+            editable={!isSaving}
             placeholder="e.g. Main bank account"
             accessibilityLabel="Source name"
           />
@@ -250,14 +402,19 @@ function AddSourceForm({ onClose, onAdd }: AddSourceFormProps) {
               return (
                 <Pressable
                   key={item}
-                  onPress={() => setType(item)}
+                  onPress={() => {
+                    setType(item);
+                    setError(null);
+                  }}
+                  disabled={isSaving}
                   accessibilityRole="button"
-                  accessibilityState={{ selected }}
+                  accessibilityState={{ selected, disabled: isSaving }}
                   style={({ pressed }) => [
                     styles.chip,
                     { borderColor: theme.border },
                     selected && { backgroundColor: theme.primary, borderColor: theme.primary },
                     pressed && styles.pressed,
+                    isSaving && styles.disabled,
                   ]}>
                   <ThemedText type="small" themeColor={selected ? 'primaryForeground' : 'text'}>
                     {typeLabel[item]}
@@ -272,26 +429,37 @@ function AddSourceForm({ onClose, onAdd }: AddSourceFormProps) {
           <ThemedText type="label">Opening balance</ThemedText>
           <Input
             value={balance}
-            onChangeText={(v) => {
-              setBalance(v);
+            onChangeText={(value) => {
+              setBalance(value);
               setError(null);
             }}
+            editable={!isSaving}
             keyboardType="decimal-pad"
             placeholder="0.00"
             accessibilityLabel="Opening balance"
           />
+          <ThemedText type="small" themeColor="textSecondary">
+            Zero or greater, with up to two decimal places.
+          </ThemedText>
         </View>
 
         <View style={styles.fieldGroup}>
           <ThemedText type="label">Currency code</ThemedText>
           <Input
             value={currency}
-            onChangeText={(v) => setCurrency(v)}
+            onChangeText={(value) => {
+              setCurrency(value);
+              setError(null);
+            }}
+            editable={!isSaving}
             placeholder="INR"
             autoCapitalize="characters"
             maxLength={3}
             accessibilityLabel="Currency code"
           />
+          <ThemedText type="small" themeColor="textSecondary">
+            Three letters, for example INR.
+          </ThemedText>
         </View>
 
         {error && (
@@ -300,8 +468,13 @@ function AddSourceForm({ onClose, onAdd }: AddSourceFormProps) {
           </ThemedText>
         )}
 
-        <Button label="Save source" onPress={handleSave} />
-      </ScrollView>
+        <Button
+          label={isSaving ? 'Saving…' : 'Save source'}
+          onPress={handleSave}
+          disabled={isSaving}
+        />
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -310,10 +483,13 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   content: { width: '100%', maxWidth: 600, alignSelf: 'center', gap: Spacing.four, padding: Spacing.four, paddingBottom: Spacing.six },
   header: { gap: Spacing.one },
+  messageCard: { gap: Spacing.three, alignItems: 'flex-start' },
+  loadingRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   totalCard: { gap: Spacing.two },
   actions: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, flexWrap: 'wrap' },
   toggle: { minHeight: 48, justifyContent: 'center' },
   pressed: { opacity: 0.72 },
+  disabled: { opacity: 0.45 },
   section: { gap: Spacing.two },
   list: { gap: Spacing.three },
   sourceCard: { gap: Spacing.three },

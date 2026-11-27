@@ -48,10 +48,11 @@ will record balance corrections rather than rewrite opening balances.
 `occurred_at`, timestamps. Implemented in migration 2 with positive safe-integer
 amounts, a foreign key to `money_sources`, and indexes for source/date and
 type/date reads. The repository currently creates expenses and debit/credit
-adjustments and provides lookup/listing; it does not create transfers,
-categories, voids, or edits yet. Future schema additions (category, transfer
-linkage, EMI occurrence linkage, void status) belong to their own roadmap
-subtasks and migrations.
+adjustments, provides lookup/listing, and exposes a minimal
+source/direction/amount projection for balance calculation. It does not create
+transfers, categories, voids, or edits yet. Future schema additions (category,
+transfer linkage, EMI occurrence linkage, void status) belong to their own
+roadmap subtasks and migrations.
 
 ### `transfers`
 `id`, `from_source_id`, `to_source_id`, `amount_minor`, `occurred_at`, nullable `note`, timestamps. May be paired with ledger entries depending on chosen implementation.

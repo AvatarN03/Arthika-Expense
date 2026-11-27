@@ -63,7 +63,22 @@ export async function runTransactionChecks(client: DatabaseClient): Promise<stri
   check(/^[a-f0-9]{32}$/.test(expense.id) && expense.createdAt === expense.updatedAt, 'ID/timestamps failed.');
   check((await transactions.getById(expense.id))?.id === expense.id, 'Lookup by ID failed.');
   check(await transactions.getById('missing') === null, 'Missing transaction must return null.');
+  const ledgerEntries = await transactions.listLedgerEntries();
+  check(ledgerEntries.length === 4, 'Minimal ledger listing failed.');
+  check(
+    ledgerEntries.every((entry) =>
+      Object.keys(entry).sort().join(',') === 'amountMinor,direction,sourceId'),
+    'Minimal ledger listing exposed extra fields.',
+  );
+  check(
+    ledgerEntries.some((entry) =>
+      entry.sourceId === bank.id
+      && entry.direction === 'debit'
+      && entry.amountMinor === 840),
+    'Minimal ledger listing lost a transaction effect.',
+  );
   checks.push('idempotent migration, expense/adjustment creation and row mapping');
+  checks.push('minimal ledger listing for balance calculation');
 
   const baseExpense: CreateExpense = {
     sourceId: bank.id, amountMinor: 100, occurredAt: '2026-11-22T10:00:00Z',
@@ -157,6 +172,7 @@ export async function runTransactionChecks(client: DatabaseClient): Promise<stri
   ]);
   check(concurrent[0].id !== concurrent[1].id, 'Concurrent writes reused a transaction ID.');
   check((await transactions.list()).length === 6, 'Concurrent writes lost data.');
+  check((await transactions.listLedgerEntries()).length === 6, 'Concurrent ledger listing lost data.');
   checks.push('queued concurrent transaction creation');
   return checks;
 }
@@ -168,6 +184,8 @@ export async function verifyTransactionPersistence(client: DatabaseClient): Prom
   const expense = all.find((item) => item.description?.startsWith('Groceries'));
   const cashExpense = all.find((item) => item.description === 'Tea and snacks');
   check(all.length === 6, 'Persisted transaction count changed.');
+  check((await transactions.listLedgerEntries()).length === 6,
+    'Persisted ledger entry count changed.');
   check(expense?.amountMinor === 840 && expense.occurredAt === '2026-11-22T05:00:00.000Z',
     'Persisted expense changed.');
   check(cashExpense !== undefined && (await transactions.getById(cashExpense.id))?.id === cashExpense.id,

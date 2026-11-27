@@ -9,12 +9,55 @@ const { initializeDatabase } = require('../src/database/initialize.ts');
 const { migrateDatabase, migrations } = require('../src/database/migrations/index.ts');
 const { createMoneySourceRepository } = require('../src/database/repositories/money-sources.ts');
 const { createTransactionRepository } = require('../src/database/repositories/transactions.ts');
+const { calculateTrackedBalances } = require('../src/domain/balance.ts');
 const { runTransactionChecks, verifyTransactionPersistence } = require('./transaction-checks.ts');
 
 test('transaction repository rules run against real SQLite', async () => {
   const client = connect();
-  try { assert.equal((await runTransactionChecks(client)).length, 6); }
+  try { assert.equal((await runTransactionChecks(client)).length, 7); }
   finally { await client.close(); }
+});
+
+test('repository ledger entries feed tracked balances', async () => {
+  const client = connect();
+  try {
+    await initializeDatabase(client, { enableWAL: false });
+    const sources = createMoneySourceRepository(client);
+    const transactions = createTransactionRepository(client);
+    const bank = await sources.create({
+      name: 'Main bank', type: 'bank', openingBalanceMinor: 50000, currencyCode: 'INR',
+    });
+    const cash = await sources.create({
+      name: 'Cash', type: 'cash', openingBalanceMinor: 2000, currencyCode: 'INR',
+    });
+
+    await transactions.createExpense({
+      sourceId: bank.id,
+      amountMinor: 840,
+      occurredAt: '2026-11-22T10:00:00Z',
+    });
+    await transactions.createAdjustment({
+      sourceId: bank.id,
+      amountMinor: 125,
+      direction: 'credit',
+      occurredAt: '2026-11-21T08:00:00Z',
+      description: 'Count correction',
+    });
+
+    const result = calculateTrackedBalances(
+      await sources.list({ includeArchived: true }),
+      await transactions.listLedgerEntries(),
+    );
+
+    const bySource = new Map(result.sources.map((item) => [item.sourceId, item]));
+    assert.deepEqual(bySource.get(bank.id), {
+      sourceId: bank.id, currencyCode: 'INR', balanceMinor: 49285,
+    });
+    assert.deepEqual(bySource.get(cash.id), {
+      sourceId: cash.id, currencyCode: 'INR', balanceMinor: 2000,
+    });
+    assert.deepEqual(result.totals, [{ currencyCode: 'INR', totalMinor: 51285 }]);
+  } finally { await client.close(); }
 });
 
 test('version one upgrades to transactions without changing existing sources', async () => {

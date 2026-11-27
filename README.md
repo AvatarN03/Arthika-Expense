@@ -39,11 +39,13 @@ The app foundation and database infrastructure are implemented.
 - Money-source validation, creation, listing, detail lookup, editing, and archive behavior
 - Transaction migration and repository for expenses and debit/credit adjustments
 - Pure balance calculation from opening balances and ledger entries
+- Database-backed Sources screen for listing, creating, and archiving sources
+- Money input parsing and display formatting helpers
 - Node/real-SQLite and domain tests plus web SQLite smoke checks
 
 ### In progress or not yet implemented
 
-- Database-backed Sources screen
+- Cross-restart and native verification
 - Expense creation and persistence
 - Transfer persistence and activity
 - Balance adjustments and cash reconciliation
@@ -54,7 +56,7 @@ The app foundation and database infrastructure are implemented.
 - Notifications
 - Backup and restore
 
-Home, Sources, Activity, EMIs, and Settings currently contain representative or placeholder UI. The Add Expense sheet is implemented as a UI flow and does not yet save data.
+Sources now reads and writes the local database. Home, Activity, EMIs, and Settings still contain representative or placeholder UI. The Add Expense sheet is implemented as a UI flow and does not yet save data.
 
 For the detailed product scope, see [PRD](docs/PRD.md) and [functional requirements](docs/FEATURES.md). For implementation status, see [progress](docs/PROGRESS.md) and [roadmap](docs/ROADMAP.md).
 
@@ -81,6 +83,7 @@ src/
   database/           SQLite connection, migrations, and repositories
   domain/             Pure financial rules such as balance calculation
   hooks/              Shared React hooks
+  lib/                Money input and display helpers
 docs/                 Product, architecture, database, and roadmap documents
 tests/                SQLite and money-source tests
 scripts/              Development-only database smoke scripts
@@ -118,7 +121,7 @@ npm run lint
 npm test
 ```
 
-`npm test` runs both suites. Database tests use isolated real-SQLite databases and cover migrations, bindings, foreign keys, transactions, queued access, schema downgrade rejection, close/reopen behavior, WAL setup, money-source repository rules, and transaction repository rules. Domain tests cover signed balance effects, per-source balances, per-currency totals, transfer pairing, validation, and safe-integer overflow.
+`npm test` runs both suites. Database tests use isolated real-SQLite databases and cover migrations, bindings, foreign keys, transactions, queued access, schema downgrade rejection, close/reopen behavior, WAL setup, money-source repository rules, transaction repository rules, ledger projection, and ledger-to-balance integration. Domain tests cover signed balance effects, per-source balances, per-currency totals, transfer pairing, validation, safe-integer overflow, and money input/format helpers.
 
 ## Web development
 
