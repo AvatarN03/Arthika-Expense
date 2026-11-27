@@ -1,6 +1,21 @@
 # ARTHIKA progress
 
-## Latest checkpoint: Phase 4.4 expense detail and edit/correction policy
+## Latest checkpoint: Phase 4.5 activity list and basic filters
+
+- The Activity screen now reads the local database instead of sample data,
+  listing up to 100 newest transactions with a type filter chip row (All,
+  Expenses, Transfers, Adjustments) showing per-filter counts.
+- Voided rows are labelled "Voided", and entries show date, type, debit/credit
+  sign, amount in the source's currency, and loading/error/empty states.
+- A summary card shows the total of loaded debit expenses and the expense
+  count (transfers and adjustments are excluded from expense totals).
+- Eighteen database tests and twenty-four domain/helper tests pass; TypeScript,
+  lint, and an Expo web export pass. Interactive browser persistence and
+  Android/Expo Go checks remain pending.
+- Phase 4 (expenses) is complete. Next proposed subtask: Phase 5.1 transfer
+  domain rules, after review.
+
+## Previous checkpoint: Phase 4.4 expense detail and edit/correction policy (historical)
 
 - Adopted the domain-recommended correction policy: void-and-reverse. A
   mistaken expense is marked voided (never deleted or rewritten) and an
@@ -282,4 +297,4 @@ database-backed Sources screen, restart persistence verification, expense
 domain validation, expense creation persistence, the database-backed Home
 screen, and the void-and-reverse correction policy with expense detail are
 implemented. Transfers, reconciliation, and EMI persistence remain unimplemented.
-Android runtime checks remain pending. Do not start Phase 4.5 automatically.
+Android runtime checks remain pending. Do not start Phase 5.1 automatically.
