@@ -91,6 +91,39 @@ test('add-expense form path converts and persists an expense', async () => {
   } finally { await client.close(); }
 });
 
+test('saved expenses appear in the bounded recent-activity list', async () => {
+  const client = connect();
+  try {
+    await initializeDatabase(client, { enableWAL: false });
+    const sources = createMoneySourceRepository(client);
+    const transactions = createTransactionRepository(client);
+    const bank = await sources.create({
+      name: 'Main bank', type: 'bank', openingBalanceMinor: 10000, currencyCode: 'INR',
+    });
+
+    await transactions.createExpense({
+      sourceId: bank.id, amountMinor: 250, occurredAt: '2026-11-20T09:00:00Z',
+    });
+    await transactions.createExpense({
+      sourceId: bank.id, amountMinor: 840, occurredAt: '2026-11-22T10:00:00Z',
+      description: 'Groceries',
+    });
+
+    const recent = await transactions.list({ limit: 2 });
+    assert.equal(recent.length, 2);
+    assert.equal(recent[0].description, 'Groceries');
+    assert.equal(recent[0].amountMinor, 840);
+    assert.equal(recent[1].amountMinor, 250);
+
+    const balances = calculateTrackedBalances(
+      await sources.list(), await transactions.listLedgerEntries(),
+    );
+    assert.deepEqual(balances.sources, [
+      { sourceId: bank.id, currencyCode: 'INR', balanceMinor: 8910 },
+    ]);
+  } finally { await client.close(); }
+});
+
 test('version one upgrades to transactions without changing existing sources', async () => {
   const client = connect();
   try {

@@ -42,12 +42,13 @@ The app foundation and database infrastructure are implemented.
 - Pure expense validation shared by the domain, repository, and expense form
 - Expense creation persistence from the Add Expense form
 - Database-backed Sources screen for listing, creating, and archiving sources
+- Database-backed Home screen with live balances and recent activity
 - Money input parsing and display formatting helpers
 - Node/real-SQLite and domain tests plus web SQLite smoke checks
 
 ### In progress or not yet implemented
 
-- Source balance/activity refresh after a saved expense
+- Expense detail and edit/correction policy
 - Transfer persistence and activity
 - Balance adjustments and cash reconciliation
 - EMI schedules, occurrences, and payment linking
@@ -57,7 +58,7 @@ The app foundation and database infrastructure are implemented.
 - Notifications
 - Backup and restore
 
-Sources now reads and writes the local database, and Add Expense persists expenses to the ledger. Home, Activity, EMIs, and Settings still contain representative or placeholder UI.
+Sources and Home now read and write the local database, and Add Expense persists expenses to the ledger. Activity, EMIs, and Settings still contain representative or placeholder UI.
 
 For the detailed product scope, see [PRD](docs/PRD.md) and [functional requirements](docs/FEATURES.md). For implementation status, see [progress](docs/PROGRESS.md) and [roadmap](docs/ROADMAP.md).
 

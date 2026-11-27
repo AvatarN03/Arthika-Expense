@@ -1,6 +1,27 @@
 # ARTHIKA progress
 
-## Latest checkpoint: Phase 4.2 expense creation persistence
+## Latest checkpoint: Phase 4.3 source balance/activity update
+
+- The Home screen now reads the local database instead of showing placeholder
+  totals and sample activity.
+- It loads active money sources and ledger entries and computes live balances
+  through `calculateTrackedBalances`, displaying the total tracked balance per
+  currency and each source's current balance.
+- Recent activity lists the newest transactions from the bounded activity list,
+  with the debit/credit sign, amount, and date. Empty and error/retry states
+  are handled.
+- After the Add Expense sheet closes, Home reloads its data, so a saved expense
+  immediately updates balances and activity. The modal's onRequestClose also
+  triggers the refresh.
+- Added an integration test verifying saved expenses appear in the bounded
+  recent-activity list and update the derived source balance. Sixteen database
+  tests and seventeen domain/helper tests pass; TypeScript, lint, and an Expo
+  web export pass.
+- Interactive browser persistence and Android/Expo Go checks remain pending.
+- Next proposed subtask: Phase 4.4 expense detail and edit/correction policy,
+  after review.
+
+## Previous checkpoint: Phase 4.2 expense creation persistence (historical)
 
 - The Add Expense form now writes to the local ledger instead of being a
   preview-only flow.
@@ -235,7 +256,7 @@ Usage and verification details: [database README](../src/database/README.md).
 Direct SQLite, its connection/migration foundation, the money-source and
 transaction schemas/repositories, the pure balance calculation, the
 database-backed Sources screen, restart persistence verification, expense
-domain validation, and expense creation persistence are implemented. Source
-balance/activity refresh, transfers, reconciliation, and EMI persistence remain
-unimplemented. Android runtime checks remain pending. Do not start Phase 4.3
-automatically.
+domain validation, expense creation persistence, and the database-backed Home
+screen with live balances and activity are implemented. Expense detail/edit
+policy, transfers, reconciliation, and EMI persistence remain unimplemented.
+Android runtime checks remain pending. Do not start Phase 4.4 automatically.
