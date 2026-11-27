@@ -1,6 +1,22 @@
 # ARTHIKA progress
 
-## Latest checkpoint: Phase 3.5 database-backed source list/create
+## Latest checkpoint: Phase 3.6 verify persistence across restarts
+
+- Added a connection-level restart test in `tests/persistence.test.cjs` that
+  writes sources and transactions through the repository layer, closes the
+  database, reopens the same file as a fresh connection (mimicking an app
+  restart), and verifies sources, transactions, and the balances derived from
+  them survive intact.
+- The test asserts both repositories return the pre-restart records unchanged
+  and that `calculateTrackedBalances` reproduces the same per-source balances
+  and per-currency totals after the reopen.
+- Fourteen database tests and eleven domain/helper tests pass. TypeScript,
+  whole-project lint, and an Expo web production export pass.
+- Interactive browser persistence and Android/Expo Go checks remain pending.
+- Phase 3 (database foundation) is now complete. Next proposed subtask:
+  Phase 4.1 expense domain validation, after review.
+
+## Previous checkpoint: Phase 3.5 database-backed source list/create (historical)
 
 - The Sources screen now uses the queued database client and the money-source
   repository instead of local sample data.
@@ -27,8 +43,6 @@
 - Thirteen database tests and eleven domain/helper tests pass. TypeScript,
   whole-project lint, and an Expo web production export pass.
 - Interactive browser persistence and Android/Expo Go checks remain pending.
-- Next proposed subtask: Phase 3.6 verify source and ledger persistence across
-  app restarts, after review.
 
 ## Previous checkpoint: Phase 3.4 balance calculation domain function (historical)
 
@@ -185,5 +199,5 @@ Direct SQLite, its connection/migration foundation, the money-source and
 transaction schemas/repositories, the pure balance calculation, and the
 database-backed Sources screen are implemented. Cross-restart verification,
 transaction UI, transfers, reconciliation, and EMI persistence remain
-unimplemented. Android runtime checks remain pending. Do not start Phase 3.6
+unimplemented. Android runtime checks remain pending. Do not start Phase 4.1
 automatically.

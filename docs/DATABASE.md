@@ -15,8 +15,10 @@ Direct Expo SQLite was approved for the MVP following the
 [data-access comparison](./DATA-ACCESS-RECOMMENDATION.md). Connection ownership,
 serialized access, and migration infrastructure are implemented. Phase 3.2 adds
 the money-source table and typed repository; Phase 3.3 adds the transaction
-ledger table and repository. The current schema version is two. Other product
-tables and screen integration remain separate roadmap subtasks.
+ledger table and repository. Phase 3.6 verifies that sources, transactions, and
+the balances derived from them survive a full close/reopen cycle (an app
+restart). The current schema version is two. Other product tables and screen
+integration remain separate roadmap subtasks.
 
 ## 2. Proposed entities
 

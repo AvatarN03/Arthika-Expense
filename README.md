@@ -121,7 +121,7 @@ npm run lint
 npm test
 ```
 
-`npm test` runs both suites. Database tests use isolated real-SQLite databases and cover migrations, bindings, foreign keys, transactions, queued access, schema downgrade rejection, close/reopen behavior, WAL setup, money-source repository rules, transaction repository rules, ledger projection, and ledger-to-balance integration. Domain tests cover signed balance effects, per-source balances, per-currency totals, transfer pairing, validation, safe-integer overflow, and money input/format helpers.
+`npm test` runs both suites. Database tests use isolated real-SQLite databases and cover migrations, bindings, foreign keys, transactions, queued access, schema downgrade rejection, close/reopen behavior, WAL setup, money-source repository rules, transaction repository rules, ledger projection, ledger-to-balance integration, and full close/reopen restart persistence. Domain tests cover signed balance effects, per-source balances, per-currency totals, transfer pairing, validation, safe-integer overflow, and money input/format helpers.
 
 ## Web development
 
