@@ -1,3 +1,4 @@
+import { buildVoidCorrection } from '../../domain/correction';
 import { validateExpense } from '../../domain/expense';
 import type { DatabaseClient, DatabaseSession } from '../client';
 
@@ -13,6 +14,7 @@ export type Transaction = {
   description: string | null;
   paymentMethod: string | null;
   occurredAt: string;
+  isVoided: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -54,6 +56,7 @@ type TransactionRow = {
   description: string | null;
   payment_method: string | null;
   occurred_at: string;
+  is_voided: number;
   created_at: string;
   updated_at: string;
 };
@@ -76,7 +79,7 @@ type NormalizedTransaction = {
 
 const columns = [
   'id', 'type', 'direction', 'amount_minor', 'source_id', 'description',
-  'payment_method', 'occurred_at', 'created_at', 'updated_at',
+  'payment_method', 'occurred_at', 'is_voided', 'created_at', 'updated_at',
 ].join(', ');
 
 function fromRow(row: TransactionRow): Transaction {
@@ -89,6 +92,7 @@ function fromRow(row: TransactionRow): Transaction {
     description: row.description,
     paymentMethod: row.payment_method,
     occurredAt: row.occurred_at,
+    isVoided: row.is_voided === 1,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -197,6 +201,65 @@ export function createTransactionRepository(client: DatabaseClient) {
 
     getById(id: string): Promise<Transaction | null> {
       return client.withSession((session) => find(session, id));
+    },
+
+    /**
+     * Voids a transaction and creates an equal-and-opposite reversing entry in
+     * the same queued transaction. The original is marked voided (and excluded
+     * from balance calculation) but retained for the audit trail.
+     */
+    async voidTransaction(id: string, reason?: string | null): Promise<{
+      voided: Transaction;
+      reversal: Transaction;
+    }> {
+      const normalizedId = normalizeRequiredText(id, 'Transaction ID');
+      return client.transaction(async (session) => {
+        const row = await session.getFirstAsync<TransactionRow>(
+          `SELECT ${columns} FROM transactions WHERE id = ?`, normalizedId,
+        );
+        if (!row) throw new Error('The selected transaction is unavailable.');
+        const original = fromRow(row);
+        const correction = buildVoidCorrection({
+          id: original.id,
+          type: original.type,
+          direction: original.direction,
+          amountMinor: original.amountMinor,
+          isVoided: original.isVoided,
+          description: original.description,
+        }, reason);
+
+        const updated = await session.runAsync(
+          'UPDATE transactions SET is_voided = 1, updated_at = ? WHERE id = ? AND is_voided = 0',
+          new Date().toISOString(), normalizedId,
+        );
+        if (updated.changes !== 1) throw new Error('This transaction is already voided.');
+
+        const timestamp = new Date().toISOString();
+        const reversalResult = await session.runAsync(
+          `INSERT INTO transactions
+            (type, direction, amount_minor, source_id, description, payment_method,
+             occurred_at, created_at, updated_at, is_voided)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
+          'adjustment', correction.reversalDirection, correction.amountMinor,
+          original.sourceId,
+          `Voided: ${correction.reason}`,
+          null, original.occurredAt, timestamp, timestamp,
+        );
+        const reversalRow = await session.getFirstAsync<TransactionRow>(
+          `SELECT ${columns} FROM transactions WHERE rowid = ?`, reversalResult.lastInsertRowId,
+        );
+        if (!reversalRow) throw new Error('Unable to read the reversing entry.');
+
+        const voidedRow = await session.getFirstAsync<TransactionRow>(
+          `SELECT ${columns} FROM transactions WHERE id = ?`, normalizedId,
+        );
+        if (!voidedRow) throw new Error('Unable to read the voided transaction.');
+
+        return {
+          voided: fromRow(voidedRow),
+          reversal: fromRow(reversalRow),
+        };
+      });
     },
 
     /**

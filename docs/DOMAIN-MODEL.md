@@ -75,7 +75,7 @@ Generation must be idempotent. Schedule edits preserve paid history; define futu
 
 ## 7. Deletion and correction
 
-Financial history must not disappear silently. Prefer archive/void for records affecting balances. Corrections should use a documented edit/audit or reversal policy. Exact delete/edit policy must be decided before destructive flows.
+Financial history must not disappear silently. Prefer archive/void for records affecting balances. The adopted correction policy is **void-and-reverse**: a mistaken transaction is marked voided and an equal-and-opposite reversing entry is created atomically; nothing is deleted or rewritten. Both rows stay in the ledger so the balance module nets them to zero and history remains auditable. In-place editing of financial fields and hard deletion are not used.
 
 ## 8. Currency
 

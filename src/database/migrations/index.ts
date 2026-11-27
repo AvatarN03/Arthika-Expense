@@ -1,6 +1,7 @@
 import type { DatabaseClient, DatabaseSession } from '../client';
 import { createMoneySources } from './001-money-sources';
 import { createTransactions } from './002-transactions';
+import { addVoidedToTransactions } from './003-voided-transactions';
 
 export type Migration = {
   version: number;
@@ -11,6 +12,7 @@ export type Migration = {
 export const migrations: readonly Migration[] = [
   { version: 1, name: 'money-sources', up: createMoneySources },
   { version: 2, name: 'transactions', up: createTransactions },
+  { version: 3, name: 'voided-transactions', up: addVoidedToTransactions },
 ];
 
 export async function migrateDatabase(

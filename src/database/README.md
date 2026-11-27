@@ -36,11 +36,13 @@ A failed upgrade rolls back its changes. A newer-than-supported schema is
 rejected, never downgraded or erased. Migration files must not launch background
 work or modify previously shipped steps.
 
-The current schema version is two. [Migration 1](./migrations/001-money-sources.ts)
+The current schema version is three. [Migration 1](./migrations/001-money-sources.ts)
 creates `money_sources` and an active-list ordering index; [migration 2](./migrations/002-transactions.ts)
 creates `transactions`, its source/date and type/date indexes, and its
-foreign-key constraint. Neither migration seeds financial data. Existing
-version-zero and version-one databases upgrade without a reset.
+foreign-key constraint; [migration 3](./migrations/003-voided-transactions.ts)
+adds the `is_voided` flag to `transactions` for the void-and-reverse correction
+policy. No migration seeds financial data. Existing version-zero, version-one,
+and version-two databases upgrade without a reset.
 
 ## Money-source repository
 
@@ -80,17 +82,22 @@ write/read layer. It currently supports:
 - `list({ sourceId?, type?, limit? })` returns newest-first records, bounded to
   1–100 rows (default 50).
 - `listLedgerEntries()` returns only source ID, direction, and amount for
-  balance calculation. It is not the activity list and has no UI row limit.
+  balance calculation. It includes both voided originals and their reversing
+  entries so the pure balance module's arithmetic nets them to zero.
+- `voidTransaction(id, reason?)` marks the transaction voided and creates an
+  equal-and-opposite reversing adjustment atomically. The original is retained
+  for the audit trail; the reason is prefixed into the reversal's description.
+  It rejects unknown, transfer, and already-voided transactions.
 
 Amounts are positive safe-integer minor units; opening balances remain the only
 signed money values. The repository trims optional/required text, canonicalizes
 input timestamps to UTC, rejects archived sources for new writes, and keeps
 SQLite constraints as a second line of defence. `transfer` is a valid stored
 type, but transfer creation is deliberately deferred to Phase 5. There is no
-update, void, delete, category, or EMI-link API yet; the correction policy
-belongs to Phase 4 and must not be guessed here. The Sources screen combines
-`listLedgerEntries()` with the pure balance module; it does not mirror balances
-into a cached database column.
+in-place edit, delete, category, or EMI-link API yet; corrections use the
+void-and-reverse policy from [the correction domain rule](../domain/correction.ts).
+The Sources screen combines `listLedgerEntries()` with the pure balance module;
+it does not mirror balances into a cached database column.
 
 ## Verification
 
@@ -103,8 +110,8 @@ concurrent inserts, version-zero upgrades, and reopening saved sources.
 Transaction checks cover expense/adjustment creation, validation, constraints,
 ordering/filtering, the minimal ledger projection, archived-source write
 blocking, historical references, concurrent writes, ledger-to-balance
-integration, version-one upgrades, rollback, and file persistence. The tests do
-not run the Expo native bridge.
+integration, void-and-reverse corrections, version-one upgrades, rollback, and
+file persistence. The tests do not run the Expo native bridge.
 
 [The browser smoke entry](../../scripts/database-smoke.web.ts) is a separate
 development-only bundle, not a route or an app import. It uses databases named

@@ -35,3 +35,14 @@ a timezone. Description and payment method are optional text that is trimmed
 and stored as `null` when blank. The transaction repository's `createExpense`
 uses this module so screens, repositories, and future flows share one
 validation path.
+
+## Correction
+
+[correction.ts](./correction.ts) implements the decided void-and-reverse
+policy: a mistaken transaction is marked voided and an equal-and-opposite
+reversing entry is created; nothing is deleted or rewritten. `buildVoidCorrection`
+validates that a transaction is not already voided and not a transfer, then
+returns the reversal direction, amount, and a reason. The repository applies
+the two writes atomically. Because both the voided original (still a ledger
+effect) and its reversal remain present, the balance module nets them to zero.
+This preserves an auditable history while restoring the tracked total.

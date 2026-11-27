@@ -1,11 +1,12 @@
 import { Image } from 'expo-image';
-import { Modal, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect, useMemo, useState } from 'react';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { AddExpenseForm } from '@/components/expenses/add-expense-form';
+import { ExpenseDetailModal } from '@/components/expenses/expense-detail-modal';
 import { AmountDisplay } from '@/components/ui/amount-display';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -40,6 +41,7 @@ export default function HomeScreen() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [isAddExpenseVisible, setAddExpenseVisible] = useState(false);
+  const [detailId, setDetailId] = useState<string | null>(null);
   const scheme = useColorScheme();
   const { width, fontScale } = useWindowDimensions();
   const stackSummaries = width < 360 || fontScale > 1.2;
@@ -203,7 +205,10 @@ export default function HomeScreen() {
                 ) : (
                   <Card>
                     {recent.map((activity) => (
-                      <View key={activity.id} style={styles.listRow}>
+                      <Pressable
+                        key={activity.id}
+                        onPress={() => setDetailId(activity.id)}
+                        style={styles.listRow}>
                         <View style={styles.rowDetails}>
                           <ThemedText type="smallBold">
                             {activity.description ?? (activity.type === 'expense' ? 'Expense' : 'Adjustment')}
@@ -215,7 +220,7 @@ export default function HomeScreen() {
                         <ThemedText type="smallBold">
                           {activity.direction === 'debit' ? '−' : '+'}{formatMinor(activity.amountMinor, sources.find((s) => s.id === activity.sourceId)?.currencyCode ?? 'INR')}
                         </ThemedText>
-                      </View>
+                      </Pressable>
                     ))}
                   </Card>
                 )}
@@ -231,6 +236,12 @@ export default function HomeScreen() {
         onRequestClose={handleSheetClose}>
         <AddExpenseForm onClose={handleSheetClose} />
       </Modal>
+      <ExpenseDetailModal
+        key={detailId ?? 'none'}
+        transactionId={detailId}
+        onClose={() => setDetailId(null)}
+        onVoided={refresh}
+      />
     </ThemedView>
   );
 }

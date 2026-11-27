@@ -124,6 +124,70 @@ test('saved expenses appear in the bounded recent-activity list', async () => {
   } finally { await client.close(); }
 });
 
+test('voiding an expense preserves history and reverses the balance', async () => {
+  const client = connect();
+  try {
+    await initializeDatabase(client, { enableWAL: false });
+    const sources = createMoneySourceRepository(client);
+    const transactions = createTransactionRepository(client);
+    const bank = await sources.create({
+      name: 'Main bank', type: 'bank', openingBalanceMinor: 5000, currencyCode: 'INR',
+    });
+    const expense = await transactions.createExpense({
+      sourceId: bank.id, amountMinor: 840, occurredAt: '2026-11-22T10:00:00Z',
+      description: 'Groceries',
+    });
+
+    const { voided, reversal } = await transactions.voidTransaction(expense.id, 'wrong amount');
+    assert.equal(voided.isVoided, true);
+    assert.equal(voided.id, expense.id);
+    assert.equal(reversal.type, 'adjustment');
+    assert.equal(reversal.direction, 'credit');
+    assert.equal(reversal.amountMinor, 840);
+    assert.equal(reversal.sourceId, bank.id);
+
+    const ledger = await transactions.listLedgerEntries();
+    // Both the (voided) original debit and the reversing credit remain, netting
+    // to zero so the tracked balance is restored to the opening balance.
+    assert.equal(ledger.length, 2);
+    const directions = ledger.map((entry) => entry.direction).sort();
+    assert.deepEqual(directions, ['credit', 'debit']);
+
+    const balances = calculateTrackedBalances(
+      await sources.list(), ledger,
+    );
+    // Opening balance restored to 5000.
+    assert.deepEqual(balances.sources, [
+      { sourceId: bank.id, currencyCode: 'INR', balanceMinor: 5000 },
+    ]);
+
+    // History is preserved: both rows are still listable.
+    const all = await transactions.list();
+    assert.equal(all.length, 2);
+    const voidedRow = all.find((item) => item.id === expense.id);
+    assert.equal(voidedRow?.isVoided, true);
+  } finally { await client.close(); }
+});
+
+test('voiding rejects unknown and already-voided transactions', async () => {
+  const client = connect();
+  try {
+    await initializeDatabase(client, { enableWAL: false });
+    const sources = createMoneySourceRepository(client);
+    const transactions = createTransactionRepository(client);
+    const bank = await sources.create({
+      name: 'Main bank', type: 'bank', openingBalanceMinor: 5000, currencyCode: 'INR',
+    });
+    const expense = await transactions.createExpense({
+      sourceId: bank.id, amountMinor: 100, occurredAt: '2026-11-22T10:00:00Z',
+    });
+
+    await assert.rejects(transactions.voidTransaction('missing'), /unavailable/);
+    await transactions.voidTransaction(expense.id);
+    await assert.rejects(transactions.voidTransaction(expense.id), /already voided/);
+  } finally { await client.close(); }
+});
+
 test('version one upgrades to transactions without changing existing sources', async () => {
   const client = connect();
   try {
@@ -133,13 +197,13 @@ test('version one upgrades to transactions without changing existing sources', a
       name: 'Existing cash', type: 'cash', openingBalanceMinor: 500, currencyCode: 'INR',
     });
     await initializeDatabase(client, { enableWAL: false });
-    assert.equal((await client.withSession((db) => db.getFirstAsync('PRAGMA user_version'))).user_version, 2);
+    assert.equal((await client.withSession((db) => db.getFirstAsync('PRAGMA user_version'))).user_version, 3);
     assert.deepEqual((await sources.getById(source.id)), source);
     assert.deepEqual(await createTransactionRepository(client).list(), []);
   } finally { await client.close(); }
 });
 
-test('failed version-two upgrade keeps version one sources and removes partial transaction schema', async () => {
+test('failed post-version-one upgrade keeps version one sources and removes partial transaction schema', async () => {
   const client = connect();
   try {
     await initializeDatabase(client, { enableWAL: false, steps: [migrations[0]] });
@@ -148,7 +212,7 @@ test('failed version-two upgrade keeps version one sources and removes partial t
       name: 'Preserved bank', type: 'bank', openingBalanceMinor: 100, currencyCode: 'INR',
     });
     await assert.rejects(migrateDatabase(client, [...migrations, {
-      version: 3, name: 'intentional-test-failure', up: async () => { throw new Error('test rollback'); },
+      version: migrations.length + 1, name: 'intentional-test-failure', up: async () => { throw new Error('test rollback'); },
     }]), /test rollback/);
     assert.equal((await client.withSession((db) => db.getFirstAsync('PRAGMA user_version'))).user_version, 1);
     assert.equal(await client.withSession((db) => db.getFirstAsync(

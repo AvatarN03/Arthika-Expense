@@ -1,6 +1,29 @@
 # ARTHIKA progress
 
-## Latest checkpoint: Phase 4.3 source balance/activity update
+## Latest checkpoint: Phase 4.4 expense detail and edit/correction policy
+
+- Adopted the domain-recommended correction policy: void-and-reverse. A
+  mistaken expense is marked voided (never deleted or rewritten) and an
+  equal-and-opposite reversing adjustment is created atomically, so history
+  stays auditable and the tracked balance is restored.
+- Added migration 3 adding `is_voided` to `transactions` (schema version 3).
+  Existing version-two databases upgrade without a reset.
+- Added a pure correction rule in `src/domain/correction.ts` (`buildVoidCorrection`)
+  that validates a voidable transaction and returns the reverse entry; the
+  transaction repository's `voidTransaction(id, reason?)` applies it atomically.
+  Ledger projection leaves both the voided original and its reversal present so
+  the balance module nets them to zero.
+- Added an expense detail modal reachable from Home's recent activity. It shows
+  amount, type, direction, timestamp, status, and description, and offers a
+  void action with loading/error feedback. Home refreshes after a successful
+  void.
+- Eighteen database tests and twenty-four domain/helper tests pass. TypeScript,
+  whole-project lint, and an Expo web production export pass.
+- Interactive browser persistence and Android/Expo Go checks remain pending.
+- Next proposed subtask: Phase 4.5 activity list and basic filters, after
+  review.
+
+## Previous checkpoint: Phase 4.3 source balance/activity update (historical)
 
 - The Home screen now reads the local database instead of showing placeholder
   totals and sample activity.
@@ -256,7 +279,7 @@ Usage and verification details: [database README](../src/database/README.md).
 Direct SQLite, its connection/migration foundation, the money-source and
 transaction schemas/repositories, the pure balance calculation, the
 database-backed Sources screen, restart persistence verification, expense
-domain validation, expense creation persistence, and the database-backed Home
-screen with live balances and activity are implemented. Expense detail/edit
-policy, transfers, reconciliation, and EMI persistence remain unimplemented.
-Android runtime checks remain pending. Do not start Phase 4.4 automatically.
+domain validation, expense creation persistence, the database-backed Home
+screen, and the void-and-reverse correction policy with expense detail are
+implemented. Transfers, reconciliation, and EMI persistence remain unimplemented.
+Android runtime checks remain pending. Do not start Phase 4.5 automatically.

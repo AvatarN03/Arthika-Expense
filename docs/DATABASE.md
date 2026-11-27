@@ -17,8 +17,10 @@ serialized access, and migration infrastructure are implemented. Phase 3.2 adds
 the money-source table and typed repository; Phase 3.3 adds the transaction
 ledger table and repository. Phase 3.6 verifies that sources, transactions, and
 the balances derived from them survive a full close/reopen cycle (an app
-restart). The current schema version is two. Other product tables and screen
-integration remain separate roadmap subtasks.
+restart). The current schema version is three: `money_sources`, `transactions`,
+and the `is_voided` transaction flag backing the void-and-reverse correction
+policy. Other product tables and screen integration remain separate roadmap
+subtasks.
 
 ## 2. Proposed entities
 

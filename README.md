@@ -41,6 +41,7 @@ The app foundation and database infrastructure are implemented.
 - Pure balance calculation from opening balances and ledger entries
 - Pure expense validation shared by the domain, repository, and expense form
 - Expense creation persistence from the Add Expense form
+- Void-and-reverse correction policy with an expense detail view
 - Database-backed Sources screen for listing, creating, and archiving sources
 - Database-backed Home screen with live balances and recent activity
 - Money input parsing and display formatting helpers
@@ -48,7 +49,7 @@ The app foundation and database infrastructure are implemented.
 
 ### In progress or not yet implemented
 
-- Expense detail and edit/correction policy
+- Full activity list and basic filters
 - Transfer persistence and activity
 - Balance adjustments and cash reconciliation
 - EMI schedules, occurrences, and payment linking
