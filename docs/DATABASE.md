@@ -14,13 +14,14 @@
 Direct Expo SQLite was approved for the MVP following the
 [data-access comparison](./DATA-ACCESS-RECOMMENDATION.md). Connection ownership,
 serialized access, and migration infrastructure are implemented. Phase 3.2 adds
-the money-source table and typed repository; the current schema version is one.
-Other product tables and screen integration remain separate roadmap subtasks.
+the money-source table and typed repository; Phase 3.3 adds the transaction
+ledger table and repository. The current schema version is two. Other product
+tables and screen integration remain separate roadmap subtasks.
 
 ## 2. Proposed entities
 
-Only `money_sources` is implemented. Other entities below remain conceptual;
-refine them in their own subtasks, not all at once.
+`money_sources` and `transactions` are implemented. Other entities below remain
+conceptual; refine them in their own subtasks, not all at once.
 
 ### `money_sources`
 `id`, `name`, `type` (bank/cash/wallet), `opening_balance_minor`, `currency_code`, `is_archived`, `created_at`, `updated_at`.
@@ -42,7 +43,15 @@ preserves IDs and rows for historical references. A later reconciliation flow
 will record balance corrections rather than rewrite opening balances.
 
 ### `transactions`
-`id`, `type` (expense/transfer/adjustment), `amount_minor`, `source_id`, nullable `category_id`, nullable `description`, nullable `payment_method`, `occurred_at`, timestamps, optional void status, nullable `transfer_id`, nullable `emi_occurrence_id`.
+`id`, `type` (expense/transfer/adjustment), `direction` (debit/credit),
+`amount_minor`, `source_id`, nullable `description`, nullable `payment_method`,
+`occurred_at`, timestamps. Implemented in migration 2 with positive safe-integer
+amounts, a foreign key to `money_sources`, and indexes for source/date and
+type/date reads. The repository currently creates expenses and debit/credit
+adjustments and provides lookup/listing; it does not create transfers,
+categories, voids, or edits yet. Future schema additions (category, transfer
+linkage, EMI occurrence linkage, void status) belong to their own roadmap
+subtasks and migrations.
 
 ### `transfers`
 `id`, `from_source_id`, `to_source_id`, `amount_minor`, `occurred_at`, nullable `note`, timestamps. May be paired with ledger entries depending on chosen implementation.

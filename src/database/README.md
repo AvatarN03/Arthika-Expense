@@ -36,9 +36,11 @@ A failed upgrade rolls back its changes. A newer-than-supported schema is
 rejected, never downgraded or erased. Migration files must not launch background
 work or modify previously shipped steps.
 
-The current schema version is one. [Migration 1](./migrations/001-money-sources.ts)
-creates only `money_sources` and an active-list ordering index, with no sample
-seeds. Existing version-zero databases upgrade without a reset.
+The current schema version is two. [Migration 1](./migrations/001-money-sources.ts)
+creates `money_sources` and an active-list ordering index; [migration 2](./migrations/002-transactions.ts)
+creates `transactions`, its source/date and type/date indexes, and its
+foreign-key constraint. Neither migration seeds financial data. Existing
+version-zero and version-one databases upgrade without a reset.
 
 ## Money-source repository
 
@@ -65,6 +67,27 @@ balances are signed safe integers; currency is explicit uppercase three-letter
 text, not an implicit INR default or a promise of multi-currency conversion.
 The API deliberately has no delete, opening-balance update, or currency update.
 
+## Transaction repository
+
+[createTransactionRepository](./repositories/transactions.ts) is the ledger
+write/read layer. It currently supports:
+
+- `createExpense({ amountMinor, sourceId, occurredAt, description?, paymentMethod? })`
+  records a debit expense.
+- `createAdjustment({ amountMinor, sourceId, direction, occurredAt, description })`
+  records a debit or credit correction with a required explanation.
+- `getById(id)` returns a record or `null`.
+- `list({ sourceId?, type?, limit? })` returns newest-first records, bounded to
+  1–100 rows (default 50).
+
+Amounts are positive safe-integer minor units; opening balances remain the only
+signed money values. The repository trims optional/required text, canonicalizes
+input timestamps to UTC, rejects archived sources for new writes, and keeps
+SQLite constraints as a second line of defence. `transfer` is a valid stored
+type, but transfer creation is deliberately deferred to Phase 5. There is no
+update, void, delete, category, or EMI-link API yet; the correction policy
+belongs to Phase 4 and must not be guessed here.
+
 ## Verification
 
 `npm run test:database` runs the database modules against Node's real SQLite
@@ -73,7 +96,10 @@ failed migrations, binding, foreign keys, rollback, concurrent access, connectio
 closing, WAL, and file persistence. Source checks cover validation, database
 constraints, integer precision, safe edits, archive/history preservation,
 concurrent inserts, version-zero upgrades, and reopening saved sources.
-It does not run the Expo native bridge.
+Transaction checks cover expense/adjustment creation, validation, constraints,
+ordering/filtering, archived-source write blocking, historical references,
+concurrent writes, version-one upgrades, rollback, and file persistence. The
+tests do not run the Expo native bridge.
 
 [The browser smoke entry](../../scripts/database-smoke.web.ts) is a separate
 development-only bundle, not a route or an app import. It uses databases named
@@ -99,6 +125,13 @@ same two-load protocol with the production migration and repository, using only
 and inspect `globalThis.__ARTHIKA_SOURCE_CHECK__`. Its test-only reference table
 is not the future transaction schema. It never opens or deletes `arthika.db`.
 
+[The transaction smoke entry](../../scripts/transactions-smoke.web.ts) follows
+the same two-load protocol with the production migrations and repositories,
+using only `arthika-transactions-check-<timestamp>.db`. Serve its bundle at
+`/scripts/transactions-smoke.web.bundle?platform=web&dev=true&hot=false&lazy=true`
+and inspect `globalThis.__ARTHIKA_TRANSACTION_CHECK__`. It never opens or
+deletes `arthika.db`.
+
 Native Expo Go verification remains pending: open/reopen on Android, repeat a
-failed transaction, and confirm data survives a full app restart. Browser and
-Node results do not establish Android behaviour.
+failed transaction, and confirm source/transaction data survives a full app
+restart. Browser and Node results do not establish Android behaviour.

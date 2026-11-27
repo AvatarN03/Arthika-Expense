@@ -37,11 +37,13 @@ The app foundation and database infrastructure are implemented.
 - Web SQLite support with cross-origin isolation configuration
 - Money-source migration and repository
 - Money-source validation, creation, listing, detail lookup, editing, and archive behavior
+- Transaction migration and repository for expenses and debit/credit adjustments
 - Node/real-SQLite tests and web SQLite smoke checks
 
 ### In progress or not yet implemented
 
 - Database-backed Sources screen
+- Balance calculation from opening balances and ledger entries
 - Expense creation and persistence
 - Transfer persistence and activity
 - Balance adjustments and cash reconciliation
@@ -115,7 +117,7 @@ npm run lint
 npm run test:database
 ```
 
-Database tests use isolated real-SQLite databases and cover migrations, bindings, foreign keys, transactions, queued access, schema downgrade rejection, close/reopen behavior, WAL setup, and money-source repository rules.
+Database tests use isolated real-SQLite databases and cover migrations, bindings, foreign keys, transactions, queued access, schema downgrade rejection, close/reopen behavior, WAL setup, money-source repository rules, and transaction repository rules.
 
 ## Web development
 

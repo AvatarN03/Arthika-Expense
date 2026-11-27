@@ -1,6 +1,30 @@
 # ARTHIKA progress
 
-## Latest checkpoint: Phase 3.2 money-source schema/repository
+## Latest checkpoint: Phase 3.3 transaction schema/repository
+
+- User approved the transaction-persistence subtask; no transaction UI or
+  expense form is included.
+- Schema version 2 adds only `transactions`, its foreign-key constraint, and
+  source/date and type/date indexes. Version-zero and version-one databases
+  upgrade without resets or sample data.
+- Added a typed repository for creating expenses and debit/credit adjustments,
+  lookup by ID, and bounded newest-first listing with source/type filters.
+  Transfers, edits, voids, categories, and EMI links remain deferred.
+- Transaction amounts are positive safe-integer minor units. The repository
+  trims text, canonicalizes timestamps to UTC, rejects archived sources for new
+  writes, and keeps SQLite constraints as a second line of defence.
+- Twelve Node/real-SQLite tests pass, including production migration rollback,
+  version-one upgrade preservation, validation, database constraints, ordering,
+  archive/history protection, concurrent writes, and file close/reopen
+  persistence.
+- TypeScript and whole-project lint pass. The transaction browser smoke entry
+  was not run in this session, and Android runtime verification remains pending.
+- Screens still use sample data and none consume the repositories. Source
+  creation/list UI belongs to Phase 3.5.
+- Next proposed subtask: Phase 3.4 balance calculation as a domain function,
+  after review.
+
+## Previous checkpoint: Phase 3.2 money-source schema/repository (historical)
 
 - User approved the next source-persistence subtask; no source UI or expense
   implementation is included.
@@ -108,7 +132,8 @@ Usage and verification details: [database README](../src/database/README.md).
 
 ## Database work still outstanding
 
-Direct SQLite, its connection/migration foundation, and the money-source
-schema/repository are implemented. Transaction persistence, balance calculations,
-source-management UI, and expense persistence remain unimplemented. Android
-runtime checks remain pending. Do not start Phase 3.3 automatically.
+Direct SQLite, its connection/migration foundation, the money-source
+schema/repository, and the transaction schema/repository are implemented.
+Balance calculations, source-management UI, transaction UI, transfers,
+reconciliation, and EMI persistence remain unimplemented. Android runtime
+checks remain pending. Do not start Phase 3.4 automatically.
