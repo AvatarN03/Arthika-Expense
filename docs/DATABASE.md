@@ -88,6 +88,15 @@ Typed settings or key/value settings for privacy, theme, notifications, lock ena
 
 Prefer deriving balances from opening balance plus ledger events, or use a controlled cached balance updated in the same transaction as each ledger event. Never let screens independently mutate cached balances. Provide recomputation/verification if caching is used.
 
+Implemented in [balance.ts](../src/domain/balance.ts) as pure functions. A
+credit adds and a debit subtracts, so expenses, adjustments, and future paired
+transfer entries use the same rule. The module returns per-source balances and
+totals grouped by currency; it does not convert currencies, filter archived
+sources, or write a cached balance. Callers pass exactly the sources and entries
+they want included. A transfer must be supplied as a paired debit and credit;
+the balance function can verify the arithmetic but cannot enforce an atomic
+transfer write.
+
 ## 5. Backup format
 
 - Include schema version.

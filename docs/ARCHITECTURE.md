@@ -89,6 +89,10 @@ Implement financial rules in domain/application functions, not screens. Use data
 - Reconciliation + adjustment.
 - Backup restore/import.
 
+Balance rules are implemented in [balance.ts](../src/domain/balance.ts) as pure
+TypeScript. It receives opening balances and ledger entries; it does not read
+SQLite or React state directly.
+
 Make occurrence generation and notification scheduling idempotent.
 
 ## 7. Notifications

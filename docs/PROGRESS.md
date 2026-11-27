@@ -1,6 +1,25 @@
 # ARTHIKA progress
 
-## Latest checkpoint: Phase 3.3 transaction schema/repository
+## Latest checkpoint: Phase 3.4 balance calculation domain function
+
+- Added a pure [balance module](../src/domain/balance.ts) with no React, Expo,
+  SQLite, or screen imports.
+- Credits add and debits subtract, so expenses, debit/credit adjustments, and
+  future paired transfer entries share one signed rule.
+- Per-source balances and per-currency totals are calculated from opening
+  balances plus ledger entries. Currencies are never converted or added
+  together; archive/void filtering remains a caller decision.
+- Inputs are validated as safe-integer minor units. Duplicate or unknown source
+  references, non-positive amounts, invalid directions, and unsafe overflow are
+  rejected.
+- No schema, repository, or screen changed. No cached balance column or balance
+  mutation was introduced.
+- Eight domain tests pass. All twelve existing database tests, TypeScript, and
+  whole-project lint pass.
+- Next proposed subtask: Phase 3.5 database-backed source list/create, after
+  review.
+
+## Previous checkpoint: Phase 3.3 transaction schema/repository (historical)
 
 - User approved the transaction-persistence subtask; no transaction UI or
   expense form is included.
@@ -132,8 +151,8 @@ Usage and verification details: [database README](../src/database/README.md).
 
 ## Database work still outstanding
 
-Direct SQLite, its connection/migration foundation, the money-source
-schema/repository, and the transaction schema/repository are implemented.
-Balance calculations, source-management UI, transaction UI, transfers,
+Direct SQLite, its connection/migration foundation, the money-source and
+transaction schemas/repositories, and the pure balance calculation are
+implemented. Database-backed source management, transaction UI, transfers,
 reconciliation, and EMI persistence remain unimplemented. Android runtime
-checks remain pending. Do not start Phase 3.4 automatically.
+checks remain pending. Do not start Phase 3.5 automatically.
