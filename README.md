@@ -43,6 +43,7 @@ The app foundation and database infrastructure are implemented.
 - Expense creation persistence from the Add Expense form
 - Void-and-reverse correction policy with an expense detail view
 - Pure transfer domain rules and atomic dual-row transfer persistence
+- Transfer form wired into Home
 - Database-backed Sources screen for listing, creating, and archiving sources
 - Database-backed Home screen with live balances and recent activity
 - Database-backed Activity screen with basic type filters
@@ -51,7 +52,7 @@ The app foundation and database infrastructure are implemented.
 
 ### In progress or not yet implemented
 
-- Transfer UI
+- Transfer activity and source effects verification
 - Transfer persistence and activity
 - Balance adjustments and cash reconciliation
 - EMI schedules, occurrences, and payment linking
@@ -61,7 +62,7 @@ The app foundation and database infrastructure are implemented.
 - Notifications
 - Backup and restore
 
-Sources, Home, and Activity now read and write the local database, and Add Expense persists expenses to the ledger. EMIs and Settings still contain representative or placeholder UI.
+Sources, Home, and Activity now read and write the local database, and Add Expense and Transfer persist to the ledger. EMIs and Settings still contain representative or placeholder UI.
 
 For the detailed product scope, see [PRD](docs/PRD.md) and [functional requirements](docs/FEATURES.md). For implementation status, see [progress](docs/PROGRESS.md) and [roadmap](docs/ROADMAP.md).
 

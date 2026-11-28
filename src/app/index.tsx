@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { AddExpenseForm } from '@/components/expenses/add-expense-form';
 import { ExpenseDetailModal } from '@/components/expenses/expense-detail-modal';
+import { TransferForm } from '@/components/transfers/transfer-form';
 import { AmountDisplay } from '@/components/ui/amount-display';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -41,6 +42,7 @@ export default function HomeScreen() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [isAddExpenseVisible, setAddExpenseVisible] = useState(false);
+  const [isTransferVisible, setTransferVisible] = useState(false);
   const [detailId, setDetailId] = useState<string | null>(null);
   const scheme = useColorScheme();
   const { width, fontScale } = useWindowDimensions();
@@ -159,7 +161,7 @@ export default function HomeScreen() {
 
               <View style={styles.actions}>
                 <Button label="Add expense" onPress={() => setAddExpenseVisible(true)} />
-                <Button label="Transfer" variant="secondary" disabled />
+                <Button label="Transfer" variant="secondary" onPress={() => setTransferVisible(true)} />
                 <Button label="Update balance" variant="ghost" disabled />
               </View>
 
@@ -235,6 +237,13 @@ export default function HomeScreen() {
         presentationStyle="pageSheet"
         onRequestClose={handleSheetClose}>
         <AddExpenseForm onClose={handleSheetClose} />
+      </Modal>
+      <Modal
+        visible={isTransferVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => { setTransferVisible(false); refresh(); }}>
+        <TransferForm onClose={() => { setTransferVisible(false); refresh(); }} />
       </Modal>
       <ExpenseDetailModal
         key={detailId ?? 'none'}

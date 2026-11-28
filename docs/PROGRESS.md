@@ -1,6 +1,20 @@
 # ARTHIKA progress
 
-## Latest checkpoint: Phase 5.2 atomic transfer persistence
+## Latest checkpoint: Phase 5.3 transfer form
+
+- Added a Transfer form sheet that loads active money sources, requires a
+  distinct source and destination, parses the amount to integer minor units,
+  stamps the current time, and persists through `createTransfer`.
+- Wired the Home "Transfer" button to open the form; Home refreshes on close so
+  new transfers update balances and activity immediately.
+- Optional note is stored as the transfer's description on both rows.
+- Twenty database tests and thirty domain/helper tests pass. TypeScript, lint,
+  and an Expo web export pass.
+- Interactive browser persistence and Android/Expo Go checks remain pending.
+- Next proposed subtask: Phase 5.4 transfer activity and source effects, after
+  review.
+
+## Previous checkpoint: Phase 5.2 atomic transfer persistence (historical)
 
 - Added migration 4 adding a `transfer_id` column to `transactions` (schema
   version 4), which links the two rows of a transfer together. Existing
@@ -332,6 +346,7 @@ transaction schemas/repositories, the pure balance calculation, the
 database-backed Sources screen, restart persistence verification, expense
 domain validation, expense creation persistence, the database-backed Home
 screen, the void-and-reverse correction policy with expense detail, and the
-pure transfer domain rules and atomic transfer persistence are implemented.
-Transfer UI, reconciliation, and EMI persistence remain unimplemented. Android
-runtime checks remain pending. Do not start Phase 5.3 automatically.
+pure transfer domain rules, atomic transfer persistence, and a transfer form
+are implemented. Transfer activity/source-effect verification, reconciliation,
+and EMI persistence remain unimplemented. Android runtime checks remain
+pending. Do not start Phase 5.4 automatically.

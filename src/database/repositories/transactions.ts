@@ -39,6 +39,7 @@ export type CreateAdjustment = BaseCreateTransaction & {
 
 export type CreateTransfer = BaseCreateTransaction & {
   toSourceId: string;
+  description?: string | null;
 };
 
 export type ListTransactionOptions = {
@@ -112,6 +113,15 @@ function normalizeRequiredText(value: string, label: string): string {
   if (typeof value !== 'string' || !value.trim() || value.includes('\0')) {
     throw new Error(`${label} is required and cannot contain null characters.`);
   }
+  return value.trim();
+}
+
+function normalizeOptionalText(value: string | null | undefined, label: string): string | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value !== 'string' || value.includes('\0')) {
+    throw new Error(`${label} cannot contain null characters.`);
+  }
+  if (value.trim() === '') return null;
   return value.trim();
 }
 
@@ -221,6 +231,7 @@ export function createTransactionRepository(client: DatabaseClient) {
         amountMinor: input.amountMinor,
         occurredAt: input.occurredAt,
       });
+      const description = normalizeOptionalText(input.description, 'Description');
       return client.transaction(async (session) => {
         const debitEffect = transferLedgerEffects(transfer).debit;
         const creditEffect = transferLedgerEffects(transfer).credit;
@@ -241,7 +252,7 @@ export function createTransactionRepository(client: DatabaseClient) {
                occurred_at, created_at, updated_at)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             'transfer', effect.direction, transfer.amountMinor, effect.sourceId,
-            null, null, transfer.occurredAt, timestamp, timestamp,
+            description, null, transfer.occurredAt, timestamp, timestamp,
           );
           return result.lastInsertRowId;
         };
