@@ -1,6 +1,28 @@
 # ARTHIKA progress
 
-## Latest checkpoint: Phase 6.2 atomic adjustment/history persistence
+## Latest checkpoint: Phase 6.3 source balance update flow
+
+- Wired the Sources screen's previously disabled "Update balance" button into a
+  real source balance update flow via the new
+  `src/components/sources/update-balance.tsx` sheet, opened from each active
+  source's action row.
+- The sheet shows the currently tracked balance for the source, accepts the
+  observed/actual balance through a decimal-pad input, and takes an optional
+  reason, then saves through the Phase 6.2 reconciliation repository
+  (`create` → `reconcile` → atomic linked adjustment when the difference is
+  non-zero), returning `{ reconciliation, adjustment }`.
+- Money entered through the UI goes through `parseMajorToMinor` into integer
+  minor units; persisted/calculated money never uses floating point. The tracked
+  balance from the balance module is passed as the reconciliation's previous
+  balance, and save/close refresh the source list.
+- The flow surfaces saving/saved/error states, disables inputs and the save
+  action while saving, and guards against double submission.
+- Twenty-five database tests and thirty-six domain/helper tests pass. TypeScript,
+  lint, and an Expo web export pass.
+- Interactive browser persistence and Android/Expo Go checks remain pending.
+- Next proposed subtask: Phase 6.4 cash reconciliation flow, after review.
+
+## Previous checkpoint: Phase 6.2 atomic adjustment/history persistence (historical)
 
 - Added migration 5 creating the `reconciliations` table (schema version 5),
   recording source, previous/entered balances, difference, currency, reason,
@@ -410,6 +432,7 @@ domain validation, expense creation persistence, the database-backed Home
 screen, the void-and-reverse correction policy with expense detail, and the
 pure transfer domain rules, atomic transfer persistence, a transfer form,
 transfer activity/source-effect display, transfer verification, the pure
-reconciliation calculation, and atomic reconciliation/adjustment persistence
-are implemented. Reconciliation UI and EMI persistence remain unimplemented.
-Android runtime checks remain pending. Do not start Phase 6.3 automatically.
+reconciliation calculation, atomic reconciliation/adjustment persistence, and
+the source balance update flow are implemented. Cash reconciliation flow
+(Phase 6.4) and EMI persistence remain unimplemented. Android runtime checks
+remain pending. Do not start Phase 6.4 automatically.

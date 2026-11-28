@@ -19,6 +19,7 @@ import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { SectionHeader } from '@/components/ui/section-header';
+import { UpdateBalance } from '@/components/sources/update-balance';
 import { Spacing, Radii } from '@/constants/theme';
 import { useDatabase } from '@/database/database-provider';
 import {
@@ -56,6 +57,7 @@ export default function SourcesScreen() {
   const [isAddVisible, setAddVisible] = useState(false);
   const [pendingArchiveId, setPendingArchiveId] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [updateTargetId, setUpdateTargetId] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -93,6 +95,10 @@ export default function SourcesScreen() {
   const balanceById = useMemo(
     () => new Map(balances.sources.map((balance) => [balance.sourceId, balance])),
     [balances],
+  );
+  const updateTarget = useMemo(
+    () => sources.find((source) => source.id === updateTargetId) ?? null,
+    [sources, updateTargetId],
   );
 
   const visible = showArchived ? sources : activeSources;
@@ -249,7 +255,7 @@ export default function SourcesScreen() {
 
                           {!source.isArchived && (
                             <View style={styles.sourceActions}>
-                              <Button label="Update balance" variant="secondary" disabled />
+                              <Button label="Update balance" variant="secondary" onPress={() => setUpdateTargetId(source.id)} />
                               <Pressable
                                 onPress={() => { void handleArchive(source.id); }}
                                 disabled={pendingArchiveId !== null}
@@ -286,6 +292,23 @@ export default function SourcesScreen() {
           <AddSourceForm
             onClose={() => setAddVisible(false)}
             onSave={handleCreate}
+          />
+        )}
+      </Modal>
+
+      <Modal
+        visible={updateTarget !== null}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setUpdateTargetId(null)}>
+        {updateTarget && (
+          <UpdateBalance
+            sourceId={updateTarget.id}
+            sourceName={updateTarget.name}
+            currencyCode={updateTarget.currencyCode}
+            balanceMinor={balanceById.get(updateTarget.id)?.balanceMinor ?? updateTarget.openingBalanceMinor}
+            onClose={() => { setUpdateTargetId(null); refresh(); }}
+            onSaved={() => { setUpdateTargetId(null); refresh(); }}
           />
         )}
       </Modal>
