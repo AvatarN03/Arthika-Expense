@@ -51,6 +51,7 @@ The app foundation and database infrastructure are implemented.
 - Cash reconciliation flow with denomination helper via "Count cash" sheet
 - Reconciliation history sheet per source with balance before/after and difference
 - Activity screen annotation: reconciliation adjustments show "Balance reconciliation" with source name
+- EMI schedule migration (schema v6) and repository (create, list, getById, updateDetails, setStatus)
 - Database-backed Sources screen for listing, creating, and archiving sources
 - Database-backed Home screen with live balances and recent activity
 - Database-backed Activity screen with basic type filters
@@ -59,7 +60,7 @@ The app foundation and database infrastructure are implemented.
 
 ### In progress or not yet implemented
 
-- EMI schedules, occurrences, and payment linking
+- EMI occurrence generation, status calculation, and UI (Phase 7.2+)
 - Commitment and shortfall calculations
 - Privacy masking
 - PIN/biometric app lock
