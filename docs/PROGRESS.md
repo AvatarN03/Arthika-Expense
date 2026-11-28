@@ -1,6 +1,25 @@
 # ARTHIKA progress
 
-## Latest checkpoint: Phase 5.1 transfer domain rules
+## Latest checkpoint: Phase 5.2 atomic transfer persistence
+
+- Added migration 4 adding a `transfer_id` column to `transactions` (schema
+  version 4), which links the two rows of a transfer together. Existing
+  version-three databases upgrade without a reset.
+- Added `createTransfer({ sourceId, toSourceId, amountMinor, occurredAt })` to
+  the transaction repository. It validates through the Phase 5.1 transfer
+  rules, then inserts the debit and credit rows in a single queued transaction,
+  linking both to the debit row's generated id. Either both sides exist or
+  neither does.
+- Both sources must be active (not archived) and distinct. Both rows are
+  `type='transfer'` and net to zero across the two sources, so a transfer never
+  changes total tracked money and is never an expense.
+- Added integration tests covering atomic dual-row persistence, net-zero
+  balances, shared transfer_id, same-source rejection, and archived-source
+  rejection. Twenty database tests and thirty domain/helper tests pass.
+- Interactive browser persistence and Android/Expo Go checks remain pending.
+- Next proposed subtask: Phase 5.3 transfer form, after review.
+
+## Previous checkpoint: Phase 5.1 transfer domain rules (historical)
 
 - Added a pure transfer module in `src/domain/transfer.ts` codifying the ledger
   invariants: a transfer is never an expense and never changes total tracked
@@ -313,6 +332,6 @@ transaction schemas/repositories, the pure balance calculation, the
 database-backed Sources screen, restart persistence verification, expense
 domain validation, expense creation persistence, the database-backed Home
 screen, the void-and-reverse correction policy with expense detail, and the
-pure transfer domain rules are implemented. Transfer persistence/UI,
-reconciliation, and EMI persistence remain unimplemented. Android runtime
-checks remain pending. Do not start Phase 5.2 automatically.
+pure transfer domain rules and atomic transfer persistence are implemented.
+Transfer UI, reconciliation, and EMI persistence remain unimplemented. Android
+runtime checks remain pending. Do not start Phase 5.3 automatically.

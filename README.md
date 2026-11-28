@@ -42,7 +42,7 @@ The app foundation and database infrastructure are implemented.
 - Pure expense validation shared by the domain, repository, and expense form
 - Expense creation persistence from the Add Expense form
 - Void-and-reverse correction policy with an expense detail view
-- Pure transfer domain rules (distinct sources, net-zero ledger effects)
+- Pure transfer domain rules and atomic dual-row transfer persistence
 - Database-backed Sources screen for listing, creating, and archiving sources
 - Database-backed Home screen with live balances and recent activity
 - Database-backed Activity screen with basic type filters
@@ -51,7 +51,7 @@ The app foundation and database infrastructure are implemented.
 
 ### In progress or not yet implemented
 
-- Transfer persistence and UI
+- Transfer UI
 - Transfer persistence and activity
 - Balance adjustments and cash reconciliation
 - EMI schedules, occurrences, and payment linking

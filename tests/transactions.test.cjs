@@ -188,6 +188,73 @@ test('voiding rejects unknown and already-voided transactions', async () => {
   } finally { await client.close(); }
 });
 
+test('transfer persists both sides atomically and nets to zero', async () => {
+  const client = connect();
+  try {
+    await initializeDatabase(client, { enableWAL: false });
+    const sources = createMoneySourceRepository(client);
+    const transactions = createTransactionRepository(client);
+    const bank = await sources.create({
+      name: 'Main bank', type: 'bank', openingBalanceMinor: 10000, currencyCode: 'INR',
+    });
+    const cash = await sources.create({
+      name: 'Cash', type: 'cash', openingBalanceMinor: 2000, currencyCode: 'INR',
+    });
+
+    const [debit, credit] = await transactions.createTransfer({
+      sourceId: bank.id, toSourceId: cash.id, amountMinor: 3000,
+      occurredAt: '2026-11-22T10:00:00Z',
+    });
+
+    assert.equal(debit.type, 'transfer');
+    assert.equal(debit.direction, 'debit');
+    assert.equal(debit.amountMinor, 3000);
+    assert.equal(credit.type, 'transfer');
+    assert.equal(credit.direction, 'credit');
+    assert.equal(credit.amountMinor, 3000);
+    assert.equal(debit.transferId, credit.transferId);
+    assert.ok(/^[a-f0-9]{32}$/.test(debit.transferId));
+
+    const ledger = await transactions.listLedgerEntries();
+    assert.equal(ledger.length, 2);
+    const balances = calculateTrackedBalances(
+      await sources.list(), ledger,
+    );
+    // Transfer does not change total tracked money.
+    assert.deepEqual(balances.totals, [{ currencyCode: 'INR', totalMinor: 12000 }]);
+    assert.deepEqual(balances.sources, [
+      { sourceId: bank.id, currencyCode: 'INR', balanceMinor: 7000 },
+      { sourceId: cash.id, currencyCode: 'INR', balanceMinor: 5000 },
+    ]);
+  } finally { await client.close(); }
+});
+
+test('transfer rejects same source and archived sources', async () => {
+  const client = connect();
+  try {
+    await initializeDatabase(client, { enableWAL: false });
+    const sources = createMoneySourceRepository(client);
+    const transactions = createTransactionRepository(client);
+    const bank = await sources.create({
+      name: 'Main bank', type: 'bank', openingBalanceMinor: 10000, currencyCode: 'INR',
+    });
+    const cash = await sources.create({
+      name: 'Cash', type: 'cash', openingBalanceMinor: 2000, currencyCode: 'INR',
+    });
+
+    await assert.rejects(transactions.createTransfer({
+      sourceId: bank.id, toSourceId: bank.id, amountMinor: 100,
+      occurredAt: '2026-11-22T10:00:00Z',
+    }), /different/);
+
+    await sources.archive(cash.id);
+    await assert.rejects(transactions.createTransfer({
+      sourceId: bank.id, toSourceId: cash.id, amountMinor: 100,
+      occurredAt: '2026-11-22T10:00:00Z',
+    }), /available/);
+  } finally { await client.close(); }
+});
+
 test('version one upgrades to transactions without changing existing sources', async () => {
   const client = connect();
   try {
@@ -197,7 +264,7 @@ test('version one upgrades to transactions without changing existing sources', a
       name: 'Existing cash', type: 'cash', openingBalanceMinor: 500, currencyCode: 'INR',
     });
     await initializeDatabase(client, { enableWAL: false });
-    assert.equal((await client.withSession((db) => db.getFirstAsync('PRAGMA user_version'))).user_version, 3);
+    assert.equal((await client.withSession((db) => db.getFirstAsync('PRAGMA user_version'))).user_version, 4);
     assert.deepEqual((await sources.getById(source.id)), source);
     assert.deepEqual(await createTransactionRepository(client).list(), []);
   } finally { await client.close(); }

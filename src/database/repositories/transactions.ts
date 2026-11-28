@@ -1,5 +1,6 @@
 import { buildVoidCorrection } from '../../domain/correction';
 import { validateExpense } from '../../domain/expense';
+import { transferLedgerEffects, validateTransfer } from '../../domain/transfer';
 import type { DatabaseClient, DatabaseSession } from '../client';
 
 export type TransactionType = 'expense' | 'transfer' | 'adjustment';
@@ -15,6 +16,7 @@ export type Transaction = {
   paymentMethod: string | null;
   occurredAt: string;
   isVoided: boolean;
+  transferId: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -33,6 +35,10 @@ export type CreateExpense = BaseCreateTransaction & {
 export type CreateAdjustment = BaseCreateTransaction & {
   direction: TransactionDirection;
   description: string;
+};
+
+export type CreateTransfer = BaseCreateTransaction & {
+  toSourceId: string;
 };
 
 export type ListTransactionOptions = {
@@ -57,6 +63,7 @@ type TransactionRow = {
   payment_method: string | null;
   occurred_at: string;
   is_voided: number;
+  transfer_id: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -77,9 +84,11 @@ type NormalizedTransaction = {
   occurredAt: string;
 };
 
+
+
 const columns = [
   'id', 'type', 'direction', 'amount_minor', 'source_id', 'description',
-  'payment_method', 'occurred_at', 'is_voided', 'created_at', 'updated_at',
+  'payment_method', 'occurred_at', 'is_voided', 'transfer_id', 'created_at', 'updated_at',
 ].join(', ');
 
 function fromRow(row: TransactionRow): Transaction {
@@ -93,6 +102,7 @@ function fromRow(row: TransactionRow): Transaction {
     paymentMethod: row.payment_method,
     occurredAt: row.occurred_at,
     isVoided: row.is_voided === 1,
+    transferId: row.transfer_id ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -196,6 +206,64 @@ export function createTransactionRepository(client: DatabaseClient) {
         direction: input.direction,
         description: normalizeRequiredText(input.description, 'Adjustment explanation'),
         paymentMethod: null,
+      });
+    },
+
+    /**
+     * Persists both sides of a transfer as two transaction rows (one debit, one
+     * credit) in a single queued transaction. Both rows share a `transfer_id`
+     * linking them, so either both exist or neither does.
+     */
+    async createTransfer(input: CreateTransfer): Promise<Transaction[]> {
+      const transfer = validateTransfer({
+        fromSourceId: input.sourceId,
+        toSourceId: input.toSourceId,
+        amountMinor: input.amountMinor,
+        occurredAt: input.occurredAt,
+      });
+      return client.transaction(async (session) => {
+        const debitEffect = transferLedgerEffects(transfer).debit;
+        const creditEffect = transferLedgerEffects(transfer).credit;
+
+        const sources = await session.getAllAsync<{ id: string }>(
+          'SELECT id FROM money_sources WHERE id IN (?, ?) AND is_archived = 0',
+          transfer.fromSourceId, transfer.toSourceId,
+        );
+        if (sources.length !== 2) {
+          throw new Error('Both transfer sources must be available and not archived.');
+        }
+
+        const timestamp = new Date().toISOString();
+        const insertSide = async (effect: { sourceId: string; direction: TransactionDirection }) => {
+          const result = await session.runAsync(
+            `INSERT INTO transactions
+              (type, direction, amount_minor, source_id, description, payment_method,
+               occurred_at, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            'transfer', effect.direction, transfer.amountMinor, effect.sourceId,
+            null, null, transfer.occurredAt, timestamp, timestamp,
+          );
+          return result.lastInsertRowId;
+        };
+
+        const debitRowId = await insertSide(debitEffect);
+        const creditRowId = await insertSide(creditEffect);
+
+        // Link both rows to the same transfer_id (the debit row's own id).
+        const debitRow = await session.getFirstAsync<TransactionRow>(
+          `SELECT ${columns} FROM transactions WHERE rowid = ?`, debitRowId,
+        );
+        if (!debitRow) throw new Error('Unable to read the transfer debit row.');
+        const transferId = debitRow.id;
+        await session.runAsync(
+          'UPDATE transactions SET transfer_id = ? WHERE rowid IN (?, ?)',
+          transferId, debitRowId, creditRowId,
+        );
+
+        const rows = await session.getAllAsync<TransactionRow>(
+          `SELECT ${columns} FROM transactions WHERE rowid IN (?, ?)`, debitRowId, creditRowId,
+        );
+        return rows.map(fromRow);
       });
     },
 
