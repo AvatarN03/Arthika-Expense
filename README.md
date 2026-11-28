@@ -53,7 +53,6 @@ The app foundation and database infrastructure are implemented.
 
 ### In progress or not yet implemented
 
-- Transfer verification (net-zero total)
 - Balance adjustments and cash reconciliation
 - EMI schedules, occurrences, and payment linking
 - Commitment and shortfall calculations

@@ -258,6 +258,49 @@ test('transfer rejects same source and archived sources', async () => {
   } finally { await client.close(); }
 });
 
+test('internal transfer preserves total tracked money and is not an expense', async () => {
+  const client = connect();
+  try {
+    await initializeDatabase(client, { enableWAL: false });
+    const sources = createMoneySourceRepository(client);
+    const transactions = createTransactionRepository(client);
+    const bank = await sources.create({
+      name: 'Main bank', type: 'bank', openingBalanceMinor: 10000, currencyCode: 'INR',
+    });
+    const cash = await sources.create({
+      name: 'Cash', type: 'cash', openingBalanceMinor: 2000, currencyCode: 'INR',
+    });
+
+    const before = calculateTrackedBalances(
+      await sources.list(), await transactions.listLedgerEntries(),
+    );
+    const totalBefore = before.totals[0].totalMinor;
+
+    await transactions.createTransfer({
+      sourceId: bank.id, toSourceId: cash.id, amountMinor: 3000,
+      occurredAt: '2026-11-22T10:00:00Z',
+    });
+
+    const after = calculateTrackedBalances(
+      await sources.list(), await transactions.listLedgerEntries(),
+    );
+    // Total tracked money is unchanged by an internal transfer.
+    assert.deepEqual(after.totals, before.totals);
+    assert.equal(after.totals[0].totalMinor, totalBefore);
+    // Source balances moved in opposite directions by the exact amount.
+    const bySource = new Map(after.sources.map((item) => [item.sourceId, item]));
+    assert.equal(bySource.get(bank.id).balanceMinor, 7000);
+    assert.equal(bySource.get(cash.id).balanceMinor, 5000);
+
+    // The transfer is not an expense: no expense-typed row was created.
+    const expenses = await transactions.list({ type: 'expense' });
+    assert.equal(expenses.length, 0);
+    const transfers = await transactions.list({ type: 'transfer' });
+    assert.equal(transfers.length, 2);
+    assert.ok(transfers.every((item) => item.type === 'transfer'));
+  } finally { await client.close(); }
+});
+
 test('version one upgrades to transactions without changing existing sources', async () => {
   const client = connect();
   try {
