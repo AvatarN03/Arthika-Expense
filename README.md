@@ -47,6 +47,8 @@ The app foundation and database infrastructure are implemented.
 - Transfer activity display with source/destination resolution
 - Pure reconciliation calculation (difference + adjustment direction)
 - Atomic reconciliation/adjustment persistence with history
+- Balance update flow (non-cash sources) via "Update balance" sheet
+- Cash reconciliation flow with denomination helper via "Count cash" sheet
 - Database-backed Sources screen for listing, creating, and archiving sources
 - Database-backed Home screen with live balances and recent activity
 - Database-backed Activity screen with basic type filters
@@ -55,7 +57,7 @@ The app foundation and database infrastructure are implemented.
 
 ### In progress or not yet implemented
 
-- Reconciliation UI
+- Reconciliation history view and Activity annotation (Phase 6.5)
 - EMI schedules, occurrences, and payment linking
 - Commitment and shortfall calculations
 - Privacy masking
