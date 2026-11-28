@@ -1,6 +1,20 @@
 # ARTHIKA progress
 
-## Latest checkpoint: Phase 5.3 transfer form
+## Latest checkpoint: Phase 5.4 transfer activity and source effects
+
+- The Activity screen now resolves transfer rows into their source/destination
+  pair and shows "from X → to Y" for each transfer, so the audit trail is
+  readable and the (voided) status is surfaced alongside it.
+- Transfer debits and credits flow through the existing ledger projection, so
+  source balances and per-currency totals already reflect them correctly;
+  transfers are excluded from expense totals.
+- Twenty database tests and thirty domain/helper tests pass. TypeScript, lint,
+  and an Expo web export pass.
+- Interactive browser persistence and Android/Expo Go checks remain pending.
+- Next proposed subtask: Phase 5.5 verify internal transfer preserves total
+  tracked money, after review.
+
+## Previous checkpoint: Phase 5.3 transfer form (historical)
 
 - Added a Transfer form sheet that loads active money sources, requires a
   distinct source and destination, parses the amount to integer minor units,
@@ -346,7 +360,7 @@ transaction schemas/repositories, the pure balance calculation, the
 database-backed Sources screen, restart persistence verification, expense
 domain validation, expense creation persistence, the database-backed Home
 screen, the void-and-reverse correction policy with expense detail, and the
-pure transfer domain rules, atomic transfer persistence, and a transfer form
-are implemented. Transfer activity/source-effect verification, reconciliation,
-and EMI persistence remain unimplemented. Android runtime checks remain
-pending. Do not start Phase 5.4 automatically.
+pure transfer domain rules, atomic transfer persistence, a transfer form, and
+transfer activity/source-effect display are implemented. Transfer verification,
+reconciliation, and EMI persistence remain unimplemented. Android runtime
+checks remain pending. Do not start Phase 5.5 automatically.

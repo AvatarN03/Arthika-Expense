@@ -91,12 +91,39 @@ export default function ActivityScreen() {
     () => new Map(sources.map((source) => [source.id, source.currencyCode])),
     [sources],
   );
+  const sourceNameById = useMemo(
+    () => new Map(sources.map((source) => [source.id, source.name])),
+    [sources],
+  );
+
+  // For transfers, pair the debit and credit rows by transfer_id to show
+  // "from X → to Y" and to keep each logical transfer visible once.
+  const transferPairs = useMemo(() => {
+    const byId = new Map<string, { from: string; to: string; transferId: string }>();
+    for (const item of transactions) {
+      if (item.type !== 'transfer' || !item.transferId) continue;
+      const existing = byId.get(item.transferId);
+      if (!existing) {
+        byId.set(item.transferId, {
+          from: item.direction === 'debit' ? item.sourceId : '',
+          to: item.direction === 'credit' ? item.sourceId : '',
+          transferId: item.transferId,
+        });
+      } else {
+        if (item.direction === 'debit') existing.from = item.sourceId;
+        if (item.direction === 'credit') existing.to = item.sourceId;
+      }
+    }
+    return byId;
+  }, [transactions]);
+
   const visible =
     activeFilter === 'all'
       ? transactions
       : transactions.filter((item) => item.type === activeFilter);
 
   const expenseCount = transactions.filter((item) => item.type === 'expense').length;
+  const transferCount = new Set(transactions.filter((t) => t.type === 'transfer' && t.transferId).map((t) => t.transferId)).size;
   const spentThisMonthMinor = transactions
     .filter((item) => item.type === 'expense' && item.direction === 'debit')
     .reduce((sum, item) => sum + item.amountMinor, 0);
@@ -118,7 +145,7 @@ export default function ActivityScreen() {
           <Card style={styles.summaryCard}>
             <AmountDisplay label="Recent expense total" amount={formatMinor(spentThisMonthMinor, shownCurrency)} size="compact" />
             <ThemedText type="small" themeColor="textSecondary">
-              In the loaded history · {expenseCount} expense{expenseCount === 1 ? '' : 's'}
+              {expenseCount} expense{expenseCount === 1 ? '' : 's'} · {transferCount} transfer{transferCount === 1 ? '' : 's'} in loaded history
             </ThemedText>
           </Card>
 
@@ -173,41 +200,48 @@ export default function ActivityScreen() {
                 />
               ) : (
                 <Card style={styles.listCard}>
-                  {visible.map((item, index) => (
-                    <View
-                      key={item.id}
-                      style={[
-                        styles.row,
-                        index < visible.length - 1 && { borderBottomWidth: 1, borderBottomColor: theme.border },
-                      ]}>
-                      <View style={styles.rowLeft}>
-                        <View
-                          style={[
-                            styles.typeDot,
-                            { backgroundColor: theme.backgroundElement },
-                          ]}>
-                          <ThemedText type="smallBold" themeColor={typeColor[item.type]}>
-                            {typeLabel[item.type][0]}
-                          </ThemedText>
+                  {visible.map((item, index) => {
+                    const isTransfer = item.type === 'transfer';
+                    const pair = isTransfer && item.transferId ? transferPairs.get(item.transferId) : undefined;
+                    const transferMeta = isTransfer && pair
+                      ? `${sourceNameById.get(pair.from) ?? pair.from} → ${sourceNameById.get(pair.to) ?? pair.to}`
+                      : null;
+                    return (
+                      <View
+                        key={item.id}
+                        style={[
+                          styles.row,
+                          index < visible.length - 1 && { borderBottomWidth: 1, borderBottomColor: theme.border },
+                        ]}>
+                        <View style={styles.rowLeft}>
+                          <View
+                            style={[
+                              styles.typeDot,
+                              { backgroundColor: theme.backgroundElement },
+                            ]}>
+                            <ThemedText type="smallBold" themeColor={typeColor[item.type]}>
+                              {typeLabel[item.type][0]}
+                            </ThemedText>
+                          </View>
+                          <View style={styles.rowDetails}>
+                            <ThemedText type="smallBold">
+                              {item.description ?? (item.type === 'expense' ? 'Expense' : typeLabel[item.type])}
+                              {item.isVoided ? ' · Voided' : ''}
+                            </ThemedText>
+                            <ThemedText type="small" themeColor="textSecondary">
+                              {transferMeta ?? formatActivityDate(item.occurredAt)} · {typeLabel[item.type]}
+                            </ThemedText>
+                          </View>
                         </View>
-                        <View style={styles.rowDetails}>
-                          <ThemedText type="smallBold">
-                            {item.description ?? (item.type === 'expense' ? 'Expense' : typeLabel[item.type])}
-                            {item.isVoided ? ' · Voided' : ''}
-                          </ThemedText>
-                          <ThemedText type="small" themeColor="textSecondary">
-                            {formatActivityDate(item.occurredAt)} · {typeLabel[item.type]}
-                          </ThemedText>
-                        </View>
+                        <ThemedText
+                          type="smallBold"
+                          themeColor={item.direction === 'credit' ? 'positive' : 'destructive'}>
+                          {item.direction === 'debit' ? '−' : '+'}
+                          {formatMinor(item.amountMinor, currencyById.get(item.sourceId) ?? 'INR')}
+                        </ThemedText>
                       </View>
-                      <ThemedText
-                        type="smallBold"
-                        themeColor={item.direction === 'credit' ? 'positive' : 'destructive'}>
-                        {item.direction === 'debit' ? '−' : '+'}
-                        {formatMinor(item.amountMinor, currencyById.get(item.sourceId) ?? 'INR')}
-                      </ThemedText>
-                    </View>
-                  ))}
+                    );
+                  })}
                 </Card>
               )}
             </View>

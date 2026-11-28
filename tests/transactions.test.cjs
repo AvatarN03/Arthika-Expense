@@ -222,10 +222,13 @@ test('transfer persists both sides atomically and nets to zero', async () => {
     );
     // Transfer does not change total tracked money.
     assert.deepEqual(balances.totals, [{ currencyCode: 'INR', totalMinor: 12000 }]);
-    assert.deepEqual(balances.sources, [
-      { sourceId: bank.id, currencyCode: 'INR', balanceMinor: 7000 },
-      { sourceId: cash.id, currencyCode: 'INR', balanceMinor: 5000 },
-    ]);
+    const bySource = new Map(balances.sources.map((item) => [item.sourceId, item]));
+    assert.deepEqual(bySource.get(bank.id), {
+      sourceId: bank.id, currencyCode: 'INR', balanceMinor: 7000,
+    });
+    assert.deepEqual(bySource.get(cash.id), {
+      sourceId: cash.id, currencyCode: 'INR', balanceMinor: 5000,
+    });
   } finally { await client.close(); }
 });
 

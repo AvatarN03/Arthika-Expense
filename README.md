@@ -44,6 +44,7 @@ The app foundation and database infrastructure are implemented.
 - Void-and-reverse correction policy with an expense detail view
 - Pure transfer domain rules and atomic dual-row transfer persistence
 - Transfer form wired into Home
+- Transfer activity display with source/destination resolution
 - Database-backed Sources screen for listing, creating, and archiving sources
 - Database-backed Home screen with live balances and recent activity
 - Database-backed Activity screen with basic type filters
@@ -52,8 +53,7 @@ The app foundation and database infrastructure are implemented.
 
 ### In progress or not yet implemented
 
-- Transfer activity and source effects verification
-- Transfer persistence and activity
+- Transfer verification (net-zero total)
 - Balance adjustments and cash reconciliation
 - EMI schedules, occurrences, and payment linking
 - Commitment and shortfall calculations
