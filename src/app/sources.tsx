@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { CashReconciliation } from "@/components/sources/cash-reconciliation";
+import { ReconciliationHistory } from "@/components/sources/reconciliation-history";
 import { UpdateBalance } from "@/components/sources/update-balance";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -67,6 +68,7 @@ export default function SourcesScreen() {
   const [pendingArchiveId, setPendingArchiveId] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [updateTargetId, setUpdateTargetId] = useState<string | null>(null);
+  const [historyTargetId, setHistoryTargetId] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -121,6 +123,10 @@ export default function SourcesScreen() {
   const updateTarget = useMemo(
     () => sources.find((source) => source.id === updateTargetId) ?? null,
     [sources, updateTargetId],
+  );
+  const historyTarget = useMemo(
+    () => sources.find((source) => source.id === historyTargetId) ?? null,
+    [sources, historyTargetId],
   );
 
   const visible = showArchived ? sources : activeSources;
@@ -320,6 +326,11 @@ export default function SourcesScreen() {
                                 variant="secondary"
                                 onPress={() => setUpdateTargetId(source.id)}
                               />
+                              <Button
+                                label="History"
+                                variant="secondary"
+                                onPress={() => setHistoryTargetId(source.id)}
+                              />
                               <Pressable
                                 onPress={() => {
                                   void handleArchive(source.id);
@@ -412,6 +423,22 @@ export default function SourcesScreen() {
             }}
           />
         ) : null}
+      </Modal>
+
+      <Modal
+        visible={historyTarget !== null}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setHistoryTargetId(null)}
+      >
+        {historyTarget && (
+          <ReconciliationHistory
+            sourceId={historyTarget.id}
+            sourceName={historyTarget.name}
+            currencyCode={historyTarget.currencyCode}
+            onClose={() => setHistoryTargetId(null)}
+          />
+        )}
       </Modal>
     </ThemedView>
   );

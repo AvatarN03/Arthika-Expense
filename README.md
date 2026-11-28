@@ -49,6 +49,8 @@ The app foundation and database infrastructure are implemented.
 - Atomic reconciliation/adjustment persistence with history
 - Balance update flow (non-cash sources) via "Update balance" sheet
 - Cash reconciliation flow with denomination helper via "Count cash" sheet
+- Reconciliation history sheet per source with balance before/after and difference
+- Activity screen annotation: reconciliation adjustments show "Balance reconciliation" with source name
 - Database-backed Sources screen for listing, creating, and archiving sources
 - Database-backed Home screen with live balances and recent activity
 - Database-backed Activity screen with basic type filters
@@ -57,7 +59,6 @@ The app foundation and database infrastructure are implemented.
 
 ### In progress or not yet implemented
 
-- Reconciliation history view and Activity annotation (Phase 6.5)
 - EMI schedules, occurrences, and payment linking
 - Commitment and shortfall calculations
 - Privacy masking
