@@ -46,3 +46,14 @@ returns the reversal direction, amount, and a reason. The repository applies
 the two writes atomically. Because both the voided original (still a ledger
 effect) and its reversal remain present, the balance module nets them to zero.
 This preserves an auditable history while restoring the tracked total.
+
+## Transfer
+
+[transfer.ts](./transfer.ts) implements the transfer invariants as pure rules.
+`validateTransfer(input)` requires exactly one distinct source and destination,
+a positive safe-integer amount in minor units, and a valid ISO instant with a
+timezone. `transferLedgerEffects(transfer)` returns the two balanced effects — a
+debit on the source and an equal credit on the destination — in the balance
+module's entry shape. Because the amounts are equal and opposite, a transfer
+never changes total tracked money and is never an expense. Atomic persistence
+of both effects is the repository/application layer's job.
