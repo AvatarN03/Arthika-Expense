@@ -3,6 +3,7 @@ import { createMoneySources } from './001-money-sources';
 import { createTransactions } from './002-transactions';
 import { addVoidedToTransactions } from './003-voided-transactions';
 import { addTransferLink } from './004-transfer-link';
+import { createReconciliations } from './005-reconciliations';
 
 export type Migration = {
   version: number;
@@ -15,6 +16,7 @@ export const migrations: readonly Migration[] = [
   { version: 2, name: 'transactions', up: createTransactions },
   { version: 3, name: 'voided-transactions', up: addVoidedToTransactions },
   { version: 4, name: 'transfer-link', up: addTransferLink },
+  { version: 5, name: 'reconciliations', up: createReconciliations },
 ];
 
 export async function migrateDatabase(

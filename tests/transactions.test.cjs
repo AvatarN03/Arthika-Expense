@@ -310,7 +310,7 @@ test('version one upgrades to transactions without changing existing sources', a
       name: 'Existing cash', type: 'cash', openingBalanceMinor: 500, currencyCode: 'INR',
     });
     await initializeDatabase(client, { enableWAL: false });
-    assert.equal((await client.withSession((db) => db.getFirstAsync('PRAGMA user_version'))).user_version, 4);
+    assert.equal((await client.withSession((db) => db.getFirstAsync('PRAGMA user_version'))).user_version, 5);
     assert.deepEqual((await sources.getById(source.id)), source);
     assert.deepEqual(await createTransactionRepository(client).list(), []);
   } finally { await client.close(); }

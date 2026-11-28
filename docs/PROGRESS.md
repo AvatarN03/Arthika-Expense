@@ -1,6 +1,25 @@
 # ARTHIKA progress
 
-## Latest checkpoint: Phase 6.1 reconciliation calculation
+## Latest checkpoint: Phase 6.2 atomic adjustment/history persistence
+
+- Added migration 5 creating the `reconciliations` table (schema version 5),
+  recording source, previous/entered balances, difference, currency, reason,
+  linked adjustment transaction id, and timestamp. Existing version-four
+  databases upgrade without a reset.
+- Added `createReconciliationRepository` in
+  `src/database/repositories/reconciliations.ts`. Its `create` uses the Phase 6.1
+  `reconcile` calculation, then in a single queued transaction validates the
+  source, creates the linked adjustment (only when the difference is non-zero),
+  and inserts the reconciliation record referencing it. Returns
+  `{ reconciliation, adjustment }`. `list` and `getById` support history reads.
+- Added integration tests covering atomic persistence + balance effect, the
+  zero-difference no-adjustment case, archived/unknown source rejection, and
+  close/reopen persistence. Twenty-five database tests and thirty-six
+  domain/helper tests pass. TypeScript, lint, and an Expo web export pass.
+- Interactive browser persistence and Android/Expo Go checks remain pending.
+- Next proposed subtask: Phase 6.3 source balance update flow, after review.
+
+## Previous checkpoint: Phase 6.1 reconciliation calculation (historical)
 
 - Added a pure reconciliation module in `src/domain/reconciliation.ts` exposing
   `reconcile(input)`, which compares a tracked balance with the actual amount
@@ -390,7 +409,7 @@ database-backed Sources screen, restart persistence verification, expense
 domain validation, expense creation persistence, the database-backed Home
 screen, the void-and-reverse correction policy with expense detail, and the
 pure transfer domain rules, atomic transfer persistence, a transfer form,
-transfer activity/source-effect display, transfer verification, and the pure
-reconciliation calculation are implemented. Reconciliation persistence/UI and
-EMI persistence remain unimplemented. Android runtime checks remain pending.
-Do not start Phase 6.2 automatically.
+transfer activity/source-effect display, transfer verification, the pure
+reconciliation calculation, and atomic reconciliation/adjustment persistence
+are implemented. Reconciliation UI and EMI persistence remain unimplemented.
+Android runtime checks remain pending. Do not start Phase 6.3 automatically.

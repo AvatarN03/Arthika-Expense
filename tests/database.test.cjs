@@ -14,9 +14,9 @@ test('production migrations initialize repeatedly with no seeded financial data'
   try {
     await initializeDatabase(client);
     await initializeDatabase(client);
-    assert.equal((await client.withSession((db) => db.getFirstAsync('PRAGMA user_version'))).user_version, 4);
+    assert.equal((await client.withSession((db) => db.getFirstAsync('PRAGMA user_version'))).user_version, 5);
     const tables = await client.withSession((db) => db.getAllAsync("SELECT name FROM sqlite_master WHERE type = 'table'"));
-    assert.deepEqual(tables.map((row) => row.name).sort(), ['money_sources', 'transactions']);
+    assert.deepEqual(tables.map((row) => row.name).sort(), ['money_sources', 'reconciliations', 'transactions']);
     assert.equal((await client.withSession((db) => db.getFirstAsync('SELECT COUNT(*) AS count FROM money_sources'))).count, 0);
     assert.equal((await client.withSession((db) => db.getFirstAsync('SELECT COUNT(*) AS count FROM transactions'))).count, 0);
   } finally { await client.close(); }

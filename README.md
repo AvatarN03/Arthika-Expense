@@ -46,6 +46,7 @@ The app foundation and database infrastructure are implemented.
 - Transfer form wired into Home
 - Transfer activity display with source/destination resolution
 - Pure reconciliation calculation (difference + adjustment direction)
+- Atomic reconciliation/adjustment persistence with history
 - Database-backed Sources screen for listing, creating, and archiving sources
 - Database-backed Home screen with live balances and recent activity
 - Database-backed Activity screen with basic type filters
@@ -54,7 +55,7 @@ The app foundation and database infrastructure are implemented.
 
 ### In progress or not yet implemented
 
-- Reconciliation persistence and UI
+- Reconciliation UI
 - EMI schedules, occurrences, and payment linking
 - Commitment and shortfall calculations
 - Privacy masking

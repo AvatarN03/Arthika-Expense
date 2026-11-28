@@ -36,15 +36,16 @@ A failed upgrade rolls back its changes. A newer-than-supported schema is
 rejected, never downgraded or erased. Migration files must not launch background
 work or modify previously shipped steps.
 
-The current schema version is four. [Migration 1](./migrations/001-money-sources.ts)
+The current schema version is five. [Migration 1](./migrations/001-money-sources.ts)
 creates `money_sources` and an active-list ordering index; [migration 2](./migrations/002-transactions.ts)
 creates `transactions`, its source/date and type/date indexes, and its
 foreign-key constraint; [migration 3](./migrations/003-voided-transactions.ts)
 adds the `is_voided` flag to `transactions` for the void-and-reverse correction
 policy; [migration 4](./migrations/004-transfer-link.ts) adds the `transfer_id`
-column linking the two rows of an atomic transfer. No migration seeds financial
-data. Existing version-zero through version-three databases upgrade without a
-reset.
+column linking the two rows of an atomic transfer; [migration 5](./migrations/005-reconciliations.ts)
+creates `reconciliations`, recording a balance reconciliation event with its
+linked adjustment transaction. No migration seeds financial data. Existing
+version-zero through version-four databases upgrade without a reset.
 
 ## Money-source repository
 
@@ -94,6 +95,11 @@ write/read layer. It currently supports:
   both sides of a transfer as two `type='transfer'` rows (one debit, one
   credit) in a single queued transaction, linked by a shared `transfer_id`.
   Both sources must be active and distinct; the two effects net to zero.
+- `createReconciliation({ sourceId, previousBalanceMinor, enteredBalanceMinor,
+  currencyCode, occurredAt, reason? })` records a reconciliation event and, when
+  the tracked and entered balances differ, creates the linked adjustment
+  transaction in the same queued transaction. Returns `{ reconciliation,
+  adjustment }`. Rejects archived/unknown sources.
 
 Amounts are positive safe-integer minor units; opening balances remain the only
 signed money values. The repository trims optional/required text, canonicalizes

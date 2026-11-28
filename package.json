@@ -43,7 +43,7 @@
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
     "test": "npm run test:database && npm run test:domain",
-    "test:database": "node --test tests/database.test.cjs tests/money-sources.test.cjs tests/transactions.test.cjs tests/persistence.test.cjs",
+    "test:database": "node --test tests/database.test.cjs tests/money-sources.test.cjs tests/transactions.test.cjs tests/persistence.test.cjs tests/reconciliations.test.cjs",
     "test:domain": "node --test tests/balance.test.cjs tests/money.test.cjs tests/expense.test.cjs tests/correction.test.cjs tests/transfer.test.cjs tests/reconciliation.test.cjs"
   },
   "private": true
