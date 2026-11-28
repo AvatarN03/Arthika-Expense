@@ -57,3 +57,13 @@ debit on the source and an equal credit on the destination — in the balance
 module's entry shape. Because the amounts are equal and opposite, a transfer
 never changes total tracked money and is never an expense. Atomic persistence
 of both effects is the repository/application layer's job.
+
+## Reconciliation
+
+[reconciliation.ts](./reconciliation.ts) exposes `reconcile(input)`, a pure
+function that compares a tracked balance with the actual amount the user
+observes and enters. It returns the signed difference, currency code, and a
+single adjustment to apply (credit when the entered balance is higher, debit
+when lower) or `null` when the two already agree. Historical transactions are
+never rewritten; the adjustment is applied once through the existing
+adjustment ledger entry.

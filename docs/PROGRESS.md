@@ -1,6 +1,23 @@
 # ARTHIKA progress
 
-## Latest checkpoint: Phase 5.5 verify internal transfer preserves total
+## Latest checkpoint: Phase 6.1 reconciliation calculation
+
+- Added a pure reconciliation module in `src/domain/reconciliation.ts` exposing
+  `reconcile(input)`, which compares a tracked balance with the actual amount
+  the user enters and returns the signed difference plus the single debit/credit
+  adjustment to apply (or null when they already agree).
+- Money values are validated as safe integers in minor units and the currency
+  code is validated as three uppercase letters.
+- Added Node unit tests in `tests/reconciliation.test.cjs` covering credit,
+  debit, zero-difference, signed-previous-balance, unsafe-integer, and currency
+  cases.
+- Twenty-one database tests and thirty-six domain/helper tests pass. TypeScript,
+  lint, and an Expo web export pass.
+- Interactive browser persistence and Android/Expo Go checks remain pending.
+- Next proposed subtask: Phase 6.2 atomic adjustment/history persistence, after
+  review.
+
+## Previous checkpoint: Phase 5.5 verify internal transfer preserves total (historical)
 
 - Added an integration test that creates two sources, records a transfer, and
   asserts the per-currency total tracked money is unchanged, the two source
@@ -373,6 +390,7 @@ database-backed Sources screen, restart persistence verification, expense
 domain validation, expense creation persistence, the database-backed Home
 screen, the void-and-reverse correction policy with expense detail, and the
 pure transfer domain rules, atomic transfer persistence, a transfer form,
-transfer activity/source-effect display, and transfer verification are
-implemented. Reconciliation and EMI persistence remain unimplemented. Android
-runtime checks remain pending. Do not start Phase 6.1 automatically.
+transfer activity/source-effect display, transfer verification, and the pure
+reconciliation calculation are implemented. Reconciliation persistence/UI and
+EMI persistence remain unimplemented. Android runtime checks remain pending.
+Do not start Phase 6.2 automatically.
